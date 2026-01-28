@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSU Live | High St. Intel</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --osu-red: #BA0C2F;
+            --green: #30D158;
+            --text-bright: #ffffff;
+            --time-color: #bbbbbb; 
+            --panel-bg: #1c1c1e;
+        }
+        body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; margin: 0; }
+        
+        /* Digital Header Animation Placeholder */
+        .hero-animation {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(45deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
+            background-size: 200% 200%;
+            animation: digitalFlow 5s infinite linear;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #333;
+            overflow: hidden;
+            position: relative;
+        }
+        @keyframes digitalFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        .hero-text { font-family: monospace; color: var(--osu-red); font-weight: bold; z-index: 2; letter-spacing: 2px; }
+
+        .report-panel {
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+        }
+        .report-panel h2 { font-size: 1rem; margin-top: 0; color: var(--osu-red); }
+        .input-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        
+        select, input, button { 
+            padding: 10px; 
+            border-radius: 8px; 
+            border: 1px solid #444; 
+            background: #2c2c2e; 
+            color: white; 
+        }
+        button { background: var(--osu-red); border: none; font-weight: bold; cursor: pointer; flex-grow: 1; }
+        button:active { transform: scale(0.98); }
+
+        .header { padding: 10px 0 20px 5px; display: flex; align-items: center; gap: 12px; }
+        .header h1 { font-size: 1.4rem; font-weight: 800; margin: 0; }
+        .live-pulse {
+            width: 8px; height: 8px; background-color: var(--green); border-radius: 50%;
+            box-shadow: 0 0 10px var(--green); animation: pulseFade 2s infinite ease-in-out;
+        }
+        @keyframes pulseFade { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+        
+        .intel-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 30px; row-gap: 28px; }
+        .intel-item { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1a1a1a; padding-bottom: 12px; }
+        .bar-name { font-size: 0.95rem; font-weight: 700; color: var(--text-bright); }
+        .wait-time { font-family: monospace; font-size: 0.9rem; font-weight: 700; color: var(--time-color); }
+    </style>
+</head>
+<body>
+
+    <div class="hero-animation">
+        <div class="hero-text">SYSTEM ACTIVE // T50 REFINERY</div>
+    </div>
+
+    <div class="header">
+        <div class="live-pulse"></div>
+        <h1>High St. <span style="color:var(--osu-red)">Live</span></h1>
+    </div>
+
+    <div class="report-panel">
+        <h2>Report Live Intel</h2>
+        <div class="input-group">
+            <select id="bar-select">
+                <option value="">Loading Bars...</option>
+            </select>
+            <input type="number" id="wait-input" placeholder="Min" style="width: 60px;">
+            <button onclick="submitReport()" id="submit-btn">Send</button>
+        </div>
+        <p id="status-msg" style="font-size: 0.8rem; color: #888; margin: 0;"></p>
+    </div>
+
+    <div class="intel-grid" id="grid-container">
+        </div>
+
+    <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyDmGXzQ8jLvclzZySdjgz_Xcx0AhA2tJv0",
+          authDomain: "college-bars-live.firebaseapp.com",
+          projectId: "college-bars-live",
+          storageBucket: "college-bars-live.firebasestorage.app",
+          messagingSenderId: "383445682025",
+          appId: "1:383445682025:web:e52c5c7c3978909755dff8",
+          measurementId: "G-WNYYV54JZZ"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const container = document.getElementById('grid-container');
+        const barSelect = document.getElementById('bar-select');
+
+        // 1. AUTH: Ensure we have a session to read/write live data
+        auth.signInAnonymously().catch(err => console.error("Auth Issue:", err));
+
+        // 2. LIVE DASHBOARD: Listen for changes in the 'bars' collection
+        db.collection("universities").doc("ohio-state").collection("bars")
+            .onSnapshot((snapshot) => {
+                container.innerHTML = ""; 
+                barSelect.innerHTML = '<option value="">Select Bar...</option>';
+                
+                snapshot.forEach((doc) => {
+                    const bar = doc.data();
+                    const barId = doc.id; // This will be 'midway'
+
+                    // Update the visual Grid
+                    container.innerHTML += `
+                        <div class="intel-item">
+                            <span class="bar-name">${bar.name}</span>
+                            <span class="wait-time">${bar.wait_time} min</span>
+                        </div>
+                    `;
+
+                    // Update the Dropdown
+                    const opt = document.createElement('option');
+                    opt.value = barId;
+                    opt.innerHTML = bar.name;
+                    barSelect.appendChild(opt);
+                });
+            }, (error) => {
+                console.error("Connection Lost:", error);
+            });
+
+        // 3. INTAKE: Submit report to the AI Refinery
+        async function submitReport() {
+            const user = auth.currentUser;
+            const barId = barSelect.value;
+            const waitTime = parseInt(document.getElementById('wait-input').value);
+            const statusMsg = document.getElementById('status-msg');
+
+            if (!user) { alert("Connecting to Buckeye Network..."); return; }
+            if (!barId || isNaN(waitTime)) { alert("Pick a bar and time!"); return; }
+
+            try {
+                // Set cooldown record for security rules
+                await db.collection("users").doc(user.uid).set({
+                    last_report_time: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                // Add to reports (This triggers your Gemini Cloud Function!)
+                await db.collection("reports").add({
+                    bar_id: barId,
+                    wait_time: waitTime,
+                    user_id: user.uid,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                statusMsg.innerText = "Intel received. Analyzing...";
+                document.getElementById('wait-input').value = "";
+            } catch (error) {
+                console.error("Submit Error:", error);
+                statusMsg.innerText = "Limit Reached: Try again in 5 mins.";
+            }
+        }
+    </script>
+</body>
+</html>

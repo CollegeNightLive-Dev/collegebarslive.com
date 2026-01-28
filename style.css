@@ -1,0 +1,95 @@
+/* Glassmorphism & Buckeye Theme */
+:root {
+    --osu-red: #BA0C2F;
+    --dark-bg: #000000;
+    --glass: rgba(255, 255, 255, 0.05);
+    --border: rgba(255, 255, 255, 0.1);
+    --safe: #30D158;
+    --warning: #FFD700;
+    --alert: #ff4b2b;
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: white;
+    font-family: -apple-system, sans-serif;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.header {
+    text-align: center;
+    padding: 40px 0 20px 0;
+}
+
+.live-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--safe);
+    border-radius: 50%;
+    margin-right: 5px;
+    box-shadow: 0 0 10px var(--safe);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+.bar-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.bar-card.active-alert {
+    border: 2px solid var(--alert);
+    background: rgba(255, 75, 43, 0.05);
+}
+
+.status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wait-time {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--safe);
+}
+
+.gemini-forecast {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+.btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+button {
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-update { background: #333; color: white; }
+.btn-alert { background: rgba(255, 75, 43, 0.2); color: var(--alert); border: 1px solid var(--alert); }
+
+button:active { transform: scale(0.95); }

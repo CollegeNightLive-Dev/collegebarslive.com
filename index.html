@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Bars Live | The Intel Feed</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .search-container { width: 80%; max-width: 600px; }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            background: #1c1c1e;
+            color: white;
+            font-size: 1.2rem;
+            outline: none;
+        }
+        .login-btn {
+            margin-top: 20px;
+            padding: 12px 24px;
+            border-radius: 20px;
+            border: none;
+            background: #fff;
+            color: #000;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        .login-btn:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+    <h1>Find Your Campus</h1>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search for a school (e.g. Ohio State)...">
+    </div>
+
+    <button id="authBtn" class="login-btn" onclick="loginWithGoogle()">Continue with Google</button>
+
+    <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyDmGXzQ8jLvclzZySdjgz_Xcx0AhA2tJv0",
+          authDomain: "college-bars-live.firebaseapp.com",
+          projectId: "college-bars-live",
+          storageBucket: "college-bars-live.firebasestorage.app",
+          messagingSenderId: "383445682025",
+          appId: "1:383445682025:web:e52c5c7c3978909755dff8",
+          measurementId: "G-WNYYV54JZZ"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.firestore(); // Initialize the Storage Tank
+        let currentUser = null;
+
+        firebase.auth().onAuthStateChanged((user) => {
+            currentUser = user;
+            const authBtn = document.getElementById('authBtn');
+            if (user) {
+                authBtn.innerText = "Logged in as " + user.displayName.split(' ')[0];
+                authBtn.style.background = "#4CAF50";
+                authBtn.style.color = "white";
+            } else {
+                authBtn.innerText = "Continue with Google";
+                authBtn.style.background = "#fff";
+                authBtn.style.color = "#000";
+            }
+        });
+
+        function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider).catch((error) => {
+                console.error("Login Error:", error.code, error.message);
+            });
+        }
+
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const query = searchInput.value.toLowerCase();
+                if (query.includes('ohio state') || query.includes('osu')) {
+                    if (currentUser) {
+                        window.location.href = 'osu.html';
+                    } else {
+                        alert('Please log in with Google first to access the OSU Intel Feed!');
+                    }
+                } else {
+                    alert('Campus data coming soon for ' + searchInput.value);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

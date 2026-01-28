@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>OSU Intel Feed | The Refinery</title>
     <style>
-        /* Ultra-Minimalist Apple Dark UI */
+        /* Ultra-Minimalist Apple Dark UI - No changes to look [cite: 2026-01-25] */
         :root {
             --bg-black: #000000;
             --border-gray: #1c1c1e;
@@ -96,14 +96,27 @@
         .row-top {
             display: flex;
             justify-content: space-between;
-            align-items: baseline;
+            align-items: flex-start;
             margin-bottom: 12px;
+        }
+
+        .venue-info {
+            display: flex;
+            flex-direction: column;
         }
 
         .venue-name {
             font-size: 17px;
             font-weight: 500;
             letter-spacing: -0.02em;
+        }
+
+        .verified-reports {
+            font-size: 9px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 2px;
         }
 
         .wait-time-text {
@@ -125,7 +138,6 @@
             transition: width 1s cubic-bezier(0.2, 1, 0.2, 1), background-color 0.5s ease;
         }
 
-        /* Discrete Vouch Controls */
         .vouch-section {
             display: flex;
             align-items: center;
@@ -143,18 +155,12 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             cursor: pointer;
-            transition: background 0.2s, border-color 0.2s;
+            transition: background 0.2s;
         }
 
-        .vouch-btn:active {
-            background: var(--border-gray);
-            border-color: var(--text-dim);
-        }
+        .vouch-btn:active { background: var(--border-gray); }
 
-        .intel-options {
-            display: flex;
-            gap: 14px;
-        }
+        .intel-options { display: flex; gap: 14px; }
 
         .intel-options button {
             background: transparent;
@@ -167,9 +173,7 @@
             transition: color 0.2s ease;
         }
 
-        .intel-options button:hover {
-            color: var(--text-main);
-        }
+        .intel-options button:hover { color: var(--text-main); }
 
         .footer {
             width: 100%;
@@ -179,7 +183,6 @@
             color: var(--footer-text);
             box-sizing: border-box;
         }
-
         .footer a { color: var(--footer-text); text-decoration: none; }
 
         @media (min-width: 850px) {
@@ -245,24 +248,28 @@
                     listElement.innerHTML = ""; 
                     venues.forEach((data) => {
                         const wait = data.wait_time || 0;
+                        const reports = data.verified_reports || 0;
                         const row = document.createElement("div");
                         row.className = "row-item";
                         row.innerHTML = `
                             <div class="row-top">
-                                <div class="venue-name">${data.name}</div>
+                                <div class="venue-info">
+                                    <div class="venue-name">${data.name}</div>
+                                    <div class="verified-reports">${reports} VERIFIED REPORTS</div>
+                                </div>
                                 <div class="wait-time-text">${wait} min</div>
                             </div>
                             <div class="bar-container">
                                 <div class="bar-fill" style="width: ${getFillPercentage(wait)}%; background-color: ${getStatusColor(wait)};"></div>
                             </div>
                             <div class="vouch-section">
-                                <button class="vouch-btn" onclick="updateWait('${collectionName}', '${data.id}', ${wait})">✓ Vouch</button>
+                                <button class="vouch-btn" onclick="vouch('${data.id}', ${wait})">✓ Vouch</button>
                                 <div class="intel-options">
-                                    <button onclick="updateWait('${collectionName}', '${data.id}', 0)">0m</button>
-                                    <button onclick="updateWait('${collectionName}', '${data.id}', 5)">5m</button>
-                                    <button onclick="updateWait('${collectionName}', '${data.id}', 15)">15m</button>
-                                    <button onclick="updateWait('${collectionName}', '${data.id}', 30)">30m</button>
-                                    <button onclick="updateWait('${collectionName}', '${data.id}', 45)">45m+</button>
+                                    <button onclick="reportIntel('${data.id}', 0)">0m</button>
+                                    <button onclick="reportIntel('${data.id}', 5)">5m</button>
+                                    <button onclick="reportIntel('${data.id}', 15)">15m</button>
+                                    <button onclick="reportIntel('${data.id}', 30)">30m</button>
+                                    <button onclick="reportIntel('${data.id}', 45)">45m+</button>
                                 </div>
                             </div>
                         `;
@@ -271,10 +278,25 @@
                 });
         }
 
-        window.updateWait = function(coll, docId, newTime) {
-            db.collection("universities").doc("ohio-state").collection(coll).doc(docId).update({
+        // Logic Change: This only reports to the feed, letting Gemini decide the live time [cite: 2026-01-25]
+        window.reportIntel = function(docId, newTime) {
+            db.collection("reports").add({
+                bar_id: docId,
                 wait_time: newTime,
-                last_updated: firebase.firestore.FieldValue.serverTimestamp()
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                user_id: "AnonymousBuckeye"
+            }).then(() => {
+                console.log("Intel sent. Gemini is verifying...");
+            });
+        };
+
+        window.vouch = function(docId, currentTime) {
+            db.collection("reports").add({
+                bar_id: docId,
+                wait_time: currentTime,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                user_id: "AnonymousBuckeye",
+                type: "vouch"
             });
         };
 

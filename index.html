@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>College Bars Live | The Intel Feed</title>
+    <title>College Bars Live | THE LIVE FEED</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -20,8 +20,44 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
+            text-align: center;
+            overflow: hidden;
         }
-        .search-container { width: 80%; max-width: 600px; }
+
+        /* Smooth Entry Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-section {
+            margin-bottom: 30px;
+            padding: 0 20px;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        h1 {
+            font-size: 3rem;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            font-weight: 900;
+        }
+
+        .subtitle {
+            color: #b0b0b0;
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .search-container { 
+            width: 80%; 
+            max-width: 600px;
+            animation: fadeIn 0.5s ease-out 0.2s forwards;
+            opacity: 0;
+        }
+
         input[type="text"] {
             width: 100%;
             padding: 15px;
@@ -32,28 +68,87 @@
             font-size: 1.2rem;
             outline: none;
         }
+
+        .login-section {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.5s ease-out 0.4s forwards;
+            opacity: 0;
+        }
+
         .login-btn {
-            margin-top: 20px;
             padding: 12px 24px;
-            border-radius: 20px;
+            border-radius: 50px;
             border: none;
             background: #fff;
             color: #000;
             cursor: pointer;
             font-weight: bold;
             transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
+
         .login-btn:hover { opacity: 0.8; }
+        
+        .consent-text {
+            margin-top: 12px;
+            font-size: 0.65rem;
+            color: #424245;
+        }
+
+        .consent-text a {
+            color: #424245;
+            text-decoration: underline;
+        }
+
+        /* High-End Discreet Footer */
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            font-size: 0.7rem;
+            color: #424245;
+            letter-spacing: 0.3px;
+            animation: fadeIn 0.8s ease-out 0.6s forwards;
+            opacity: 0;
+        }
+
+        .footer a {
+            color: #424245;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Find Your Campus</h1>
+    <div class="hero-section">
+        <h1>THE LIVE FEED</h1>
+        <p class="subtitle">AI-driven crowd analytics for live campus bar and food joint wait times.</p>
+    </div>
+
     <div class="search-container">
         <input type="text" id="searchInput" placeholder="Search for a school (e.g. Ohio State)...">
     </div>
 
-    <button id="authBtn" class="login-btn" onclick="loginWithGoogle()">Continue with Google</button>
+    <div class="login-section">
+        <button id="authBtn" class="login-btn" onclick="loginWithGoogle()">
+            <img id="googleIcon" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" style="width:18px;">
+            <span id="btnText">Continue with Google</span>
+        </button>
+        <p class="consent-text">By signing in, you agree to our <a href="terms.html">Terms and Conditions</a>.</p>
+    </div>
+
+    <div class="footer">
+        © 2026 <a href="terms.html">Srikar Konda & Jackson Stevenson</a>. All rights reserved.
+    </div>
 
     <script>
         const firebaseConfig = {
@@ -70,20 +165,28 @@
             firebase.initializeApp(firebaseConfig);
         }
 
-        const db = firebase.firestore(); // Initialize the Storage Tank
+        const db = firebase.firestore();
         let currentUser = null;
 
         firebase.auth().onAuthStateChanged((user) => {
             currentUser = user;
             const authBtn = document.getElementById('authBtn');
+            const btnText = document.getElementById('btnText');
+            const googleIcon = document.getElementById('googleIcon');
+            const consentText = document.querySelector('.consent-text');
+            
             if (user) {
-                authBtn.innerText = "Logged in as " + user.displayName.split(' ')[0];
+                btnText.innerText = "Logged in as " + user.displayName.split(' ')[0];
                 authBtn.style.background = "#4CAF50";
                 authBtn.style.color = "white";
+                googleIcon.style.display = "none";
+                consentText.style.display = "none"; // Hide consent once logged in
             } else {
-                authBtn.innerText = "Continue with Google";
+                btnText.innerText = "Continue with Google";
                 authBtn.style.background = "#fff";
                 authBtn.style.color = "#000";
+                googleIcon.style.display = "block";
+                consentText.style.display = "block";
             }
         });
 

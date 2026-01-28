@@ -1,95 +1,128 @@
-/* Glassmorphism & Buckeye Theme */
-:root {
-    --osu-red: #BA0C2F;
-    --dark-bg: #000000;
-    --glass: rgba(255, 255, 255, 0.05);
-    --border: rgba(255, 255, 255, 0.1);
-    --safe: #30D158;
-    --warning: #FFD700;
-    --alert: #ff4b2b;
-}
-
+/* Apple Minimalist Theme */
 body {
-    background-color: var(--dark-bg);
-    color: white;
-    font-family: -apple-system, sans-serif;
+    background-color: #ffffff;
+    color: #1d1d1f; /* Apple's specific off-black */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
-    padding: 20px;
-    line-height: 1.6;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
 }
 
-.header {
+header {
     text-align: center;
-    padding: 40px 0 20px 0;
+    padding: 60px 20px 40px;
+    background-color: #f5f5f7; /* Apple's light gray secondary background */
 }
 
-.live-indicator {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background-color: var(--safe);
-    border-radius: 50%;
-    margin-right: 5px;
-    box-shadow: 0 0 10px var(--safe);
-    animation: pulse 1.5s infinite;
+header h1 {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin: 0;
 }
 
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.3; }
-    100% { opacity: 1; }
+header p {
+    font-size: 19px;
+    color: #86868b;
+    margin-top: 10px;
 }
 
-.bar-card {
-    background: var(--glass);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 15px;
-    backdrop-filter: blur(10px);
-}
-
-.bar-card.active-alert {
-    border: 2px solid var(--alert);
-    background: rgba(255, 75, 43, 0.05);
-}
-
-.status-row {
+.dashboard-container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.column {
+    flex: 1;
+    min-width: 320px;
+}
+
+.column-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    border-bottom: 1px solid #d2d2d7;
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid #d2d2d7;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.card h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+}
+
+.wait-label {
+    font-size: 12px;
+    color: #86868b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
 }
 
 .wait-time {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--safe);
+    font-size: 32px;
+    font-weight: 700;
+    margin: 10px 0 20px;
 }
 
-.gemini-forecast {
-    font-size: 0.8rem;
-    color: #888;
-    margin-top: 10px;
-    font-style: italic;
-}
-
-.btn-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+.button-group {
+    display: flex;
     gap: 10px;
-    margin-top: 15px;
+    justify-content: center;
 }
 
 button {
-    padding: 12px;
-    border-radius: 12px;
+    background-color: #0071e3; /* Apple Blue */
+    color: #ffffff;
     border: none;
-    font-weight: bold;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-    transition: 0.2s;
+    transition: background 0.2s ease;
 }
 
-.btn-update { background: #333; color: white; }
-.btn-alert { background: rgba(255, 75, 43, 0.2); color: var(--alert); border: 1px solid var(--alert); }
+button:hover {
+    background-color: #0077ed;
+}
 
-button:active { transform: scale(0.95); }
+/* Secondary Button Look */
+button + button {
+    background-color: #f5f5f7;
+    color: #0071e3;
+}
+
+button + button:hover {
+    background-color: #e8e8ed;
+}
+
+@media (max-width: 768px) {
+    .dashboard-container { flex-direction: column; }
+    header h1 { font-size: 32px; }
+}

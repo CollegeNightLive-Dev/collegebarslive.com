@@ -12,13 +12,16 @@
             line-height: 1.6;
             margin: 0;
             display: flex;
-            justify-content: center;
-            padding: 80px 20px;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 80px 20px 0; /* Padding bottom moved to footer */
         }
 
         .content {
             max-width: 700px;
             width: 100%;
+            flex: 1; /* Pushes footer to bottom */
         }
 
         h1 {
@@ -75,7 +78,27 @@
             font-size: 12px;
             color: #888;
             margin-top: 60px;
+            margin-bottom: 60px; /* Space before footer */
             border: 1px solid #222;
+        }
+
+        /* High-End Discreet Footer */
+        .footer {
+            width: 100%;
+            text-align: center;
+            padding-bottom: 30px;
+            font-size: 0.7rem;
+            color: #424245;
+            letter-spacing: 0.3px;
+        }
+
+        .footer a {
+            color: #424245;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -109,6 +132,10 @@
         <div class="legal-notice">
             This platform is an independent project and is not affiliated with, endorsed by, or sponsored by any local businesses or academic institutions.
         </div>
+    </div>
+
+    <div class="footer">
+        © 2026 <a href="terms.html">Srikar Konda & Jackson Stevenson</a>. All rights reserved.
     </div>
 
 </body>

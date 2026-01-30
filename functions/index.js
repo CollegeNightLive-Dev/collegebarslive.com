@@ -1,84 +1,107 @@
-const { onDocumentCreated } = require('firebase-functions/v2/firestore');
-const { defineSecret } = require('firebase-functions/params');
-const admin = require('firebase-admin');
+// final index.js - jan 30 (Always-Warm Multi-Campus Refinery)
+// © 2026 Srikar Konda & Jackson Stevenson 
+
+const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { defineSecret } = require('firebase-functions/params'); 
+const admin = require("firebase-admin");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const logger = require("firebase-functions/logger");
 
-admin.initializeApp();
+if (!admin.apps.length) { admin.initializeApp(); }
 
-// Link the secret key you set in the terminal [cite: 2026-01-25]
-const geminiKey = defineSecret('GEMINI_API_KEY');
+const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 
-exports.processintel = onDocumentCreated({
-    document: "reports/{reportId}",
-    secrets: [geminiKey] 
+let genAI;
+let model;
+
+const initializeAI = () => {
+    if (!genAI) {
+        const apiValue = GEMINI_API_KEY.value();
+        genAI = new GoogleGenerativeAI(apiValue);
+        // --- 🚀 SPEED OPTIMIZATION: REMOVED SEARCH TOOL ---
+        model = genAI.getGenerativeModel({ 
+            model: "gemini-2.0-flash" 
+        });
+    }
+};
+
+const getRecentIntelCount = (timestamps) => {
+    if (!timestamps || !Array.isArray(timestamps)) return 0;
+    const tenMinsAgo = Date.now() - (10 * 60 * 1000);
+    return timestamps.filter(ts => {
+        const ms = ts.toMillis ? ts.toMillis() : ts;
+        return ms > tenMinsAgo;
+    }).length;
+};
+
+// --- 🏗️ THE RANGE ROVER CONFIGURATION ---
+exports.predictVenueWait = onDocumentUpdated({ 
+    document: "universities/{uniId}/{collectionId}/{venueId}",
+    secrets: [GEMINI_API_KEY],
+    timeoutSeconds: 60,
+    memory: "256MiB",
+    minInstances: 1, // THE PILOT LIGHT: Keeps it "Hot" 24/7 for instant updates
+    maxInstances: 10 // THE GOVERNOR: Prevents runaway costs
 }, async (event) => {
-    const newReport = event.data.data();
-    const barId = newReport.bar_id;
+    const newData = event.data.after.data();
+    if (newData.status !== "Refining") return null;
 
-    logger.info(`Processing report for: ${barId}`);
+    const venueRef = event.data.after.ref;
 
     try {
-        // Initialize Gemini inside the trigger [cite: 2026-01-25]
-        const genAI = new GoogleGenerativeAI(geminiKey.value());
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-        // 1. Fetch the last 10 reports to give Gemini context
-        const snapshot = await admin.firestore().collection('reports')
-            .where('bar_id', '==', barId)
-            .orderBy('timestamp', 'desc')
-            .limit(10)
-            .get();
-
-        if (snapshot.empty) {
-            logger.info("No reports found for this bar.");
-            return null;
-        }
-
-        let history = "";
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const time = data.timestamp ? data.timestamp.toDate().toLocaleTimeString() : "Now";
-            history += `- ${data.wait_time} min report at ${time}\n`;
-        });
-
-        // 2. The AI prompt that prevents trolling [cite: 2026-01-25]
-        const prompt = `You are an AI bar analyst for Ohio State. 
-        Current reports for ${barId}:
-        ${history}
+        // --- 🏗️ THE BUFFER TANK (CACHING) ---
+        const lastRefined = newData.ai_last_refined?.toMillis() || 0;
+        const cacheWindow = 5 * 60 * 1000; 
         
-        Analyze these reports. Ignore obvious outliers (trolls). 
-        Based on recency and consistency, determine the most accurate wait time.
-        Return ONLY the integer (number) and nothing else.`;
-
-        // 3. Get the decision from Gemini
-        const result = await model.generateContent(prompt);
-        const aiResponse = result.response.text().trim();
-        const finalWaitTime = parseInt(aiResponse);
-
-        if (isNaN(finalWaitTime)) {
-            logger.error(`Gemini returned an invalid value: ${aiResponse}`);
-            return null;
+        if (Date.now() - lastRefined < cacheWindow) {
+            return venueRef.update({
+                status: "AI-Verified",
+                ai_reason: (newData.ai_reason || "Intel remains steady.") + " (Buffered)"
+            });
         }
 
-        logger.info(`Gemini Analysis Complete: ${barId} is now ${finalWaitTime}m.`);
+        initializeAI();
+        const { uniId, collectionId } = event.params; 
+        const rollingIntelCount = getRecentIntelCount(newData.verification_timestamps);
+        const currentTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+        
+        const lastUpdated = newData.last_updated?.toMillis() || Date.now();
+        const minutesSinceUpdate = (Date.now() - lastUpdated) / (1000 * 60);
+        const gravityFactor = Math.floor(minutesSinceUpdate / 15) * 10;
+        const decayedWait = Math.max(0, (newData.wait_time || 0) - gravityFactor);
 
-        // 4. Update the LIVE bar in the universities collection
-        // Check both 'bars' and 'food-joints' subcollections
-        const barRef = admin.firestore().collection('universities').doc('ohio-state').collection('bars').doc(barId);
-        const foodRef = admin.firestore().collection('universities').doc('ohio-state').collection('food-joints').doc(barId);
+        // --- 🚀 SPEED OPTIMIZATION: REMOVED "SEARCH TASK" FROM PROMPT ---
+        const prompt = `
+        ACT AS: Expert analyst for ${uniId.toUpperCase()}. 
+        CONTEXT: ${newData.name} at ${currentTime}.
+        
+        DATA:
+        - Input: ${newData.wait_time}m
+        - Decay: ${decayedWait}m
+        - Verifications: ${rollingIntelCount} (10m)
 
-        const barDoc = await barRef.get();
-        const targetRef = barDoc.exists ? barRef : foodRef;
+        TASK: Refine wait time based on decay and volume. Do not search. 
+        Return ONLY JSON: {"prediction": number, "reason": "string"}`;
 
-        return await targetRef.update({
-            wait_time: finalWaitTime,
-            verified_reports: snapshot.size,
-            last_updated: admin.firestore.FieldValue.serverTimestamp()
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text().replace(/```json|```/g, "").trim();
+        
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("Invalid Signal: No JSON found");
+        const aiData = JSON.parse(jsonMatch[0]);
+
+        await venueRef.update({
+            predicted_wait: aiData.prediction ?? 0,
+            ai_reason: aiData.reason || "Internal logic refinement.",
+            status: "AI-Verified",
+            ai_last_refined: admin.firestore.FieldValue.serverTimestamp()
         });
 
     } catch (error) {
-        logger.error("Error in Gemini Brain:", error);
-        return null;
+        console.error("Refinery Process Error:", error);
+        await venueRef.update({ 
+            status: "AI-Error", 
+            ai_reason: "Refinery throughput limit reached. Displaying user intel."
+        });
     }
+    return null;
 });

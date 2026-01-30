@@ -2,216 +2,207 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>College Bars Live | THE LIVE FEED</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Live Feed | Predict Your Night</title>
     <style>
-        body {
-            background-color: #000;
-            color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
-            overflow: hidden;
+        :root {
+            --bg-black: #000000;
+            --text-main: #ffffff;
+            --text-dim: #636366;
+            --footer-text: #424245;
+            --accent-gray: #1c1c1e;
+            --iu-crimson: #990000; /* New branding color for search match */
         }
 
-        /* Smooth Entry Animations */
+        html, body {
+            height: 100%;
+            margin: 0;
+            background-color: var(--bg-black);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            padding: 0 24px;
+            text-align: center;
+        }
+
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            animation: fadeIn 0.8s ease-out;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .hero-section {
-            margin-bottom: 30px;
-            padding: 0 20px;
-            animation: fadeIn 0.5s ease-out forwards;
+        .main-content {
+            width: 100%;
+            max-width: 600px;
         }
 
         h1 {
-            font-size: 3rem;
-            letter-spacing: 4px;
-            margin-bottom: 10px;
+            font-size: clamp(44px, 10vw, 78px);
             font-weight: 900;
+            letter-spacing: -0.02em;
+            margin: 0 0 16px 0;
+            line-height: 0.95;
+            text-transform: uppercase;
         }
 
-        .subtitle {
-            color: #b0b0b0;
-            font-size: 1.1rem;
-            max-width: 500px;
-            margin: 0 auto;
-            line-height: 1.5;
+        .hero-desc {
+            font-size: 17px;
+            color: #86868b;
+            line-height: 1.4;
+            margin-bottom: 40px;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .search-container { 
-            width: 80%; 
-            max-width: 600px;
-            animation: fadeIn 0.5s ease-out 0.2s forwards;
-            opacity: 0;
+        .search-container {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto 50px;
         }
 
         input[type="text"] {
             width: 100%;
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #333;
-            background: #1c1c1e;
+            padding: 18px 24px;
+            background: var(--accent-gray);
+            border: 1px solid #2c2c2e;
+            border-radius: 14px;
             color: white;
-            font-size: 1.2rem;
+            font-size: 17px;
             outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        .login-section {
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            animation: fadeIn 0.5s ease-out 0.4s forwards;
-            opacity: 0;
+        input[type="text"]:focus {
+            border-color: #444;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
         }
 
-        .login-btn {
-            padding: 12px 24px;
-            border-radius: 50px;
-            border: none;
-            background: #fff;
-            color: #000;
-            cursor: pointer;
-            font-weight: bold;
-            transition: opacity 0.2s;
+        /* Coming Soon Section */
+        .coming-soon-header {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        .features-grid {
             display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
-        .login-btn:hover { opacity: 0.8; }
-        
-        .consent-text {
-            margin-top: 12px;
-            font-size: 0.65rem;
-            color: #424245;
+        .feature-item {
+            font-size: 10px;
+            color: var(--footer-text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .consent-text a {
-            color: #424245;
-            text-decoration: underline;
+        .dot {
+            height: 3px;
+            width: 3px;
+            background-color: var(--footer-text);
+            border-radius: 50%;
         }
 
-        /* High-End Discreet Footer */
-        .footer {
-            position: absolute;
-            bottom: 30px;
-            font-size: 0.7rem;
-            color: #424245;
-            letter-spacing: 0.3px;
-            animation: fadeIn 0.8s ease-out 0.6s forwards;
-            opacity: 0;
+        footer {
+            padding-bottom: 40px;
         }
 
-        .footer a {
-            color: #424245;
-            text-decoration: none;
+        .copyright {
+            font-size: 10px;
+            color: var(--footer-text);
+            letter-spacing: 0.02em;
         }
 
-        .footer a:hover {
-            text-decoration: underline;
+        @media (max-width: 600px) {
+            h1 { font-size: 52px; }
+            .search-container { margin-bottom: 40px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="hero-section">
-        <h1>THE LIVE FEED</h1>
-        <p class="subtitle">AI-driven crowd analytics for live campus bar and food joint wait times.</p>
+    <div class="main-wrapper">
+        <div class="main-content">
+            <h1>THE LIVE<br>FEED</h1>
+            <p class="hero-desc">Self-learning AI model predicting live campus bar and food joint wait times.</p>
+
+            <div class="search-container">
+                <input type="text" id="schoolSearch" placeholder="Search for a school (e.g. Purdue)..." onkeypress="handleSearch(event)">
+            </div>
+
+            <div class="coming-soon-section">
+                <div class="coming-soon-header">LIVE NOTIFICATIONS - COMING SOON TO APP STORE</div>
+                <div class="features-grid">
+                    <div class="feature-item"><span class="dot"></span> "SECURITY (UC)"</div>
+                    <div class="feature-item"><span class="dot"></span> MUSIC VIBE</div>
+                    <div class="feature-item"><span class="dot"></span> SPECIAL GUESTS</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search for a school (e.g. Ohio State)...">
-    </div>
-
-    <div class="login-section">
-        <button id="authBtn" class="login-btn" onclick="loginWithGoogle()">
-            <img id="googleIcon" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" style="width:18px;">
-            <span id="btnText">Continue with Google</span>
-        </button>
-        <p class="consent-text">By signing in, you agree to our <a href="terms.html">Terms and Conditions</a>.</p>
-    </div>
-
-    <div class="footer">
-        © 2026 <a href="terms.html">Srikar Konda & Jackson Stevenson</a>. All rights reserved.
-    </div>
+    <footer>
+        <div class="copyright">
+            © 2026 Srikar Konda & Jackson Stevenson. All rights reserved.
+        </div>
+    </footer>
 
     <script>
-        const firebaseConfig = {
-          apiKey: "AIzaSyDmGXzQ8jLvclzZySdjgz_Xcx0AhA2tJv0",
-          authDomain: "college-bars-live.firebaseapp.com",
-          projectId: "college-bars-live",
-          storageBucket: "college-bars-live.firebasestorage.app",
-          messagingSenderId: "383445682025",
-          appId: "1:383445682025:web:e52c5c7c3978909755dff8",
-          measurementId: "G-WNYYV54JZZ"
-        };
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-
-        const db = firebase.firestore();
-        let currentUser = null;
-
-        firebase.auth().onAuthStateChanged((user) => {
-            currentUser = user;
-            const authBtn = document.getElementById('authBtn');
-            const btnText = document.getElementById('btnText');
-            const googleIcon = document.getElementById('googleIcon');
-            const consentText = document.querySelector('.consent-text');
-            
-            if (user) {
-                btnText.innerText = "Logged in as " + user.displayName.split(' ')[0];
-                authBtn.style.background = "#4CAF50";
-                authBtn.style.color = "white";
-                googleIcon.style.display = "none";
-                consentText.style.display = "none"; // Hide consent once logged in
-            } else {
-                btnText.innerText = "Continue with Google";
-                authBtn.style.background = "#fff";
-                authBtn.style.color = "#000";
-                googleIcon.style.display = "block";
-                consentText.style.display = "block";
-            }
-        });
-
-        function loginWithGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).catch((error) => {
-                console.error("Login Error:", error.code, error.message);
-            });
-        }
-
-        const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                const query = searchInput.value.toLowerCase();
-                if (query.includes('ohio state') || query.includes('osu')) {
-                    if (currentUser) {
-                        window.location.href = 'osu.html';
-                    } else {
-                        alert('Please log in with Google first to access the OSU Intel Feed!');
-                    }
-                } else {
-                    alert('Campus data coming soon for ' + searchInput.value);
+        /**
+         * Resolves search queries to the universal template with specific uniId params.
+         * This architecture allows for 100% scalability without creating new .html files.
+         */
+        function handleSearch(event) {
+            if (event.key === "Enter") {
+                const query = document.getElementById('schoolSearch').value.toLowerCase().trim();
+                
+                // Redirect logic using URL parameters for the dynamic template
+                if (query.includes('ohio state') || query === 'osu') {
+                    window.location.href = 'university.html?uni=ohio-state';
+                } 
+                else if (query.includes('purdue')) {
+                    window.location.href = 'university.html?uni=purdue';
+                }
+                else if (query.includes('miami')) {
+                    window.location.href = 'university.html?uni=miami-oh';
+                }
+                else if (query.includes('cincinnati') || query === 'uc') {
+                    window.location.href = 'university.html?uni=cincinnati';
+                }
+                else if (query.includes('ohio university') || query === 'ou' || query === 'ohio') {
+                    window.location.href = 'university.html?uni=ohio-university';
+                }
+                // Default fallback
+                else {
+                    alert("School not found. We are currently live at OSU, Miami, Cincinnati, Purdue, and OU!");
                 }
             }
-        });
+        }
     </script>
 </body>
 </html>

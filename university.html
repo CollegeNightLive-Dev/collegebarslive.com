@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Intel Feed | The Refinery</title>
+    <style>
+        :root {
+            --bg-black: #000000;
+            --border-gray: #1c1c1e;
+            --text-main: #ffffff;
+            --text-dim: #636366;
+            --footer-text: #424245;
+            --wait-green: #30d158;
+            --wait-yellow: #ffd60a;
+            --wait-red: #ff453a;
+            --vouch-border: #2c2c2e;
+            --status-closed: #3a3a3c;
+            --gemini-blue: #4285f4;
+            --gemini-purple: #9b72cb;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            margin: 0; padding: 0; -webkit-font-smoothing: antialiased;
+            display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden;
+            animation: fadeIn 0.5s ease-out forwards; opacity: 0;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        header { text-align: center; padding: 80px 32px 40px; }
+        .header-title-wrapper { position: relative; display: inline-block; margin: 0 auto; }
+        header h1 { font-size: 28px; font-weight: 800; letter-spacing: 2px; margin: 0; text-transform: uppercase; display: inline-block; }
+        
+        .live-dot {
+            position: absolute; right: -22px; top: 50%; transform: translateY(-50%);
+            height: 10px; width: 10px; background-color: var(--wait-green);
+            border-radius: 50%; box-shadow: 0 0 10px var(--wait-green);
+            animation: pulseGreen 2s infinite ease-in-out;
+        }
+        @keyframes pulseGreen { 0%, 100% { opacity: 0.2; transform: translateY(-50%) scale(0.9); } 50% { opacity: 1; transform: translateY(-50%) scale(1.1); } }
+
+        header p { font-size: 11px; color: var(--text-dim); margin-top: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; line-height: 1.6; max-width: 400px; margin-left: auto; margin-right: auto; }
+
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .login-btn { padding: 12px 24px; border-radius: 50px; border: none; background: #fff; color: #000; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem; }
+
+        .dashboard-container { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 0 32px 120px; box-sizing: border-box; flex: 1; }
+        .column { width: 100%; max-width: 500px; margin-bottom: 60px; }
+        .column-header h2 { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border-gray); }
+
+        .row-item { margin-bottom: 40px; width: 100%; }
+        .row-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .venue-name { font-size: 17px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+
+        /* Animated Gemini Component [cite: 2026-01-25] */
+        .gemini-container { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; position: relative; }
+        .gemini-spark { width: 12px; height: 12px; fill: url(#gemini-gradient); animation: pulseSpark 1.5s infinite ease-in-out; }
+        .gemini-orbit { position: absolute; width: 20px; height: 20px; border: 1.5px solid transparent; border-top-color: var(--gemini-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulseSpark { 0%, 100% { transform: scale(0.85); opacity: 0.7; } 50% { transform: scale(1.1); opacity: 1; } }
+
+        .verified-reports { font-size: 9px; color: var(--text-dim); text-transform: uppercase; margin-top: 2px; }
+        .ai-reasoning { font-size: 10px; color: var(--text-dim); font-style: italic; margin-bottom: 12px; margin-top: -10px; line-height: 1.4; }
+        .wait-time-text { font-size: 14px; font-weight: 600; }
+
+        .bar-container { width: 100%; height: 3px; background-color: var(--border-gray); border-radius: 2px; overflow: hidden; margin-bottom: 18px; }
+        .bar-fill { height: 100%; transition: width 1s ease; }
+
+        .vouch-section { display: flex; align-items: center; gap: 16px; }
+        .vouch-btn { background: transparent; color: var(--text-main); border: 1px solid var(--vouch-border); padding: 4px 12px; border-radius: 6px; font-size: 9px; font-weight: 600; text-transform: uppercase; cursor: pointer; }
+        .intel-options { display: flex; gap: 14px; }
+        .intel-options button { background: transparent; color: var(--text-dim); border: none; font-size: 10px; font-weight: 600; cursor: pointer; }
+        
+        .thanks-message { display: none; font-size: 10px; font-weight: 500; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+        .thanks-message span { color: var(--wait-green); margin-left: 4px; }
+        .row-item.was-updated .thanks-message { display: block !important; }
+
+        .footer { width: 100%; text-align: center; padding-bottom: 40px; font-size: 0.7rem; color: var(--footer-text); }
+
+        @media (min-width: 850px) { .dashboard-container { flex-direction: row; justify-content: center; gap: 100px; align-items: flex-start; } .column { flex: 1; } }
+    </style>
+</head>
+<body class="logged-out">
+
+    <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+        <linearGradient id="gemini-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4285f4" />
+            <stop offset="100%" stop-color="#9b72cb" />
+        </linearGradient>
+    </svg>
+
+    <div id="login-overlay">
+        <button class="login-btn" onclick="loginWithGoogle()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
+            Continue with Google
+        </button>
+    </div>
+
+    <header>
+        <div class="header-title-wrapper">
+            <h1 id="dynamic-uni-title">COLLEGE NAME IS NEXT.</h1>
+            <span class="live-dot"></span>
+        </div>
+        <p id="dynamic-uni-tagline">We don't know your college like you do. Help us build the most accurate map for COLLEGE NAME.</p>
+    </header>
+
+    <div class="dashboard-container">
+        <section class="column">
+            <div class="column-header"><h2>The Inside Intel (Bars & Food)</h2></div>
+            <div id="bars-list"></div>
+        </section>
+        <section class="column">
+            <div class="column-header"><h2>Late Night Eats Live</h2></div>
+            <div id="food-list"></div>
+        </section>
+    </div>
+
+    <div class="footer">
+        © 2026 Srikar Konda & Jackson Stevenson
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="env.js"></script>
+
+    <script>
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // --- SCALE LOGIC: Identify University from URL [cite: 2026-01-30] ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const uniId = urlParams.get('uni') || 'ohio-state'; 
+        const rawName = uniId.replace(/-/g, ' ');
+        const upperName = rawName.toUpperCase();
+
+        // Update Dynamic Fields [cite: 2026-01-30]
+        document.getElementById('dynamic-uni-title').innerText = `${upperName} INTEL FEED`;
+        document.getElementById('dynamic-uni-tagline').innerText = `Crowdsourced intel for ${rawName}. More data = More accuracy. Share with your friends so we can kill the margin of error.`;
+
+        let currentBars = [];
+        let currentFood = [];
+        let lastUpdatedVenueId = null;
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.body.classList.remove('logged-out');
+                document.getElementById('login-overlay').style.display = 'none';
+            } else {
+                document.body.classList.add('logged-out');
+                document.getElementById('login-overlay').style.display = 'flex';
+            }
+        });
+
+        function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(console.error);
+        }
+
+        function renderCurrentLists() {
+            renderList("bars-list", currentBars);
+            renderList("food-list", currentFood);
+        }
+
+        function renderList(elementId, venues) {
+            const listElement = document.getElementById(elementId);
+            // Default sort by name if no specific order map provided for new campuses
+            venues.sort((a, b) => a.name.localeCompare(b.name));
+            listElement.innerHTML = ""; 
+            
+            venues.forEach((data) => {
+                const finalWait = (data.predicted_wait !== undefined) ? data.predicted_wait : (data.wait_time || 0);
+                const reason = data.ai_reason || "";
+                const isClosed = reason.toLowerCase().includes("closed");
+                const isRefining = data.status === "Refining"; 
+
+                const now = Date.now();
+                const tenMinutesAgo = now - 600000;
+                const recentVerifications = (data.verification_timestamps || []).filter(ts => {
+                    const time = ts.toMillis ? ts.toMillis() : ts;
+                    return time > tenMinutesAgo;
+                });
+                const rollCount = recentVerifications.length;
+
+                const row = document.createElement("div");
+                row.className = `row-item ${data.id === lastUpdatedVenueId ? 'was-updated' : ''}`;
+                
+                const geminiIcon = `
+                    <div class="gemini-container">
+                        <div class="gemini-orbit"></div>
+                        <svg class="gemini-spark" viewBox="0 0 24 24">
+                            <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2V12L9.5 9.5L12 2Z" />
+                        </svg>
+                    </div>
+                `;
+
+                row.innerHTML = `
+                    <div class="row-top">
+                        <div class="venue-info">
+                            <div class="venue-name">
+                                ${data.name} 
+                                ${isRefining ? geminiIcon : ''}
+                            </div>
+                            <div class="verified-reports">${rollCount} INTEL VERIFICATIONS IN LAST 10 MIN</div>
+                        </div>
+                        <div class="wait-time-text">${getWaitRange(finalWait, reason)}</div>
+                    </div>
+                    <div class="ai-reasoning">AI Analysis (Powered by Gemini): "${reason || "Gathering data..."}"</div>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: ${isClosed ? '100' : Math.min(100, (finalWait/45)*100)}%; background-color: ${getStatusColor(finalWait, reason)};"></div>
+                    </div>
+                    <div class="thanks-message">Thank you for your input <span>✓</span></div>
+                    <div class="vouch-section">
+                        <button class="vouch-btn" onclick="vouch('${elementId.includes('bars') ? 'bars' : 'food-joints'}', '${data.id}')">Verify Time</button>
+                        <div class="intel-options">
+                            <button onclick="reportIntel('${elementId.includes('bars') ? 'bars' : 'food-joints'}', '${data.id}', 0)">0m</button>
+                            <button onclick="reportIntel('${elementId.includes('bars') ? 'bars' : 'food-joints'}', '${data.id}', 10)">10m</button>
+                            <button onclick="reportIntel('${elementId.includes('bars') ? 'bars' : 'food-joints'}', '${data.id}', 20)">20m</button>
+                            <button onclick="reportIntel('${elementId.includes('bars') ? 'bars' : 'food-joints'}', '${data.id}', 35)">35m</button>
+                            <button onclick="reportIntel('${elementId.includes('bars') ? 'bars' : 'food-joints'}', '${data.id}', 50)">50m</button>
+                        </div>
+                    </div>`;
+                listElement.appendChild(row);
+            });
+        }
+
+        function getWaitRange(mins, reason) { 
+            if (reason && reason.toLowerCase().includes("closed")) return "CLOSED";
+            if (mins <= 5) return "0–5 min"; 
+            if (mins <= 15) return "5–15 min"; 
+            if (mins <= 25) return "15–25 min"; 
+            if (mins <= 40) return "25–40 min"; 
+            return "45 min+"; 
+        }
+
+        function getStatusColor(mins, reason) { 
+            if (reason && reason.toLowerCase().includes("closed")) return "var(--status-closed)"; 
+            if (mins <= 15) return "var(--wait-green)"; 
+            if (mins <= 30) return "var(--wait-yellow)"; 
+            return "var(--wait-red)"; 
+        }
+
+        // Listeners configured for scale [cite: 2026-01-30]
+        db.collection("universities").doc(uniId).collection("bars").onSnapshot(snap => {
+            currentBars = []; snap.forEach(doc => currentBars.push({ id: doc.id, ...doc.data() }));
+            renderCurrentLists();
+        });
+
+        db.collection("universities").doc(uniId).collection("food-joints").onSnapshot(snap => {
+            currentFood = []; snap.forEach(doc => currentFood.push({ id: doc.id, ...doc.data() }));
+            renderCurrentLists();
+        });
+
+        window.reportIntel = async function(col, docId, newTime) {
+            if(!auth.currentUser) return;
+            lastUpdatedVenueId = docId;
+            await db.collection("universities").doc(uniId).collection(col).doc(docId).update({
+                wait_time: newTime, 
+                status: "Refining",
+                last_updated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        };
+
+        window.vouch = async function(col, docId) {
+            if(!auth.currentUser) return;
+            lastUpdatedVenueId = docId;
+            await db.collection("universities").doc(uniId).collection(col).doc(docId).update({
+                status: "Refining",
+                last_vouch: firebase.firestore.FieldValue.serverTimestamp(),
+                verification_timestamps: firebase.firestore.FieldValue.arrayUnion(firebase.firestore.Timestamp.now())
+            });
+        };
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -958,45 +958,34 @@
 
     <div id="safety" class="tab-content">
         <div class="dashboard-container" style="text-align: center; justify-content: center; padding-top: 60px;">
-            
-            <div id="circle-gate" class="circle-setup-card">
-                <h2>Trusted Circle</h2>
-                <p>Unlock beacons by creating or joining a circle.</p>
-                <button class="setup-btn" onclick="createCircle()">Create My Circle</button>
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <input type="text" id="join-code-input" placeholder="Invite Code" style="flex: 1; background: #1c1c1e; border: 1px solid var(--vouch-border); border-radius: 10px; color: #fff; padding: 12px;">
-                    <button class="setup-btn" style="width: auto; margin-bottom: 0;" onclick="joinCircle()">Join</button>
-                </div>
-            </div>
-
-            <div id="circle-active" style="display: none; width: 100%; max-width: 500px;">
-                <div class="active-circle-banner">CIRCLE: <span id="display-circle-code">---</span></div>
-                
+            <div style="background: var(--intel-card); border: 1px solid var(--border-gray); border-radius: 16px; padding: 24px; max-width: 500px; margin: 0 auto; width: 100%;">
+                <p style="color: var(--accent-color); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; font-size: 12px;">Personal Intelligence Beacons</p>
+                <p style="font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 20px;">
+                    Your friends are your first responders. We're launching a tiered beacon system that allows you to alert your friend group for situations that don't always feel like emergencies but deserve some notice.
+                </p>
                 <div class="beacon-grid">
-                    <div class="beacon-btn" onclick="triggerBeacon('Check In')" style="border-bottom: 3px solid var(--tier-blue);">
+                    <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-blue);">
+                        <span class="coming-soon-tag">Soon</span>
                         <span class="tier-icon">📍</span>
                         <span class="beacon-label" style="color: var(--tier-blue);">Check In</span>
                     </div>
-                    <div class="beacon-btn" onclick="triggerBeacon('Lost')" style="border-bottom: 3px solid var(--tier-yellow);">
+                    <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-yellow);">
+                        <span class="coming-soon-tag">Soon</span>
                         <span class="tier-icon">🔦</span>
                         <span class="beacon-label" style="color: var(--tier-yellow);">Lost</span>
                     </div>
-                    <div class="beacon-btn" onclick="triggerBeacon('Walk With Me')" style="border-bottom: 3px solid var(--tier-orange);">
+                    <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-orange);">
+                        <span class="coming-soon-tag">Soon</span>
                         <span class="tier-icon">🚶‍♀️</span>
                         <span class="beacon-label" style="color: var(--tier-orange);">Walk With Me</span>
                     </div>
-                    <div class="beacon-btn" onclick="triggerBeacon('Something Off')" style="border-bottom: 3px solid var(--tier-red);">
+                    <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-red);">
+                        <span class="coming-soon-tag">Soon</span>
                         <span class="tier-icon">⚠️</span>
                         <span class="beacon-label" style="color: var(--tier-red);">Something's Off</span>
                     </div>
                 </div>
-
-                <div class="member-list" style="margin-top: 30px; text-align: left; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px;">
-                    <p style="font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px;">Trusted Circle Members</p>
-                    <div id="circle-members-roster"></div>
-                </div>
             </div>
-
         </div>
     </div>
 

@@ -947,41 +947,76 @@
         let currentBars = [], currentFood = [], lastUpdatedVenueId = null;
         let postLimit = 15;
 
-        // --- SCALE-READY INDIVIDUAL ANCHOR ALGORITHM ---
-        function calculateDynamicWait(vouchedTime, lastUpdatedTimestamp, isFood, venueData) {
-            if (!lastUpdatedTimestamp) return "0-5";
-
+        // --- CONTEXT-AWARE REFINERY ALGORITHM ---
+        function calculateDynamicWait(docData) {
             const now = new Date();
-            const lastUpdated = lastUpdatedTimestamp.toDate ? lastUpdatedTimestamp.toDate() : new Date(lastUpdatedTimestamp);
-            const elapsedMinutes = Math.max(0, (now - lastUpdated) / (1000 * 60));
-
-            const day = now.getDay();
-            const hour = now.getHours();
-            const minute = now.getMinutes();
-
-            let anchor = venueData.historical_baseline || 0;
-            let skepticism = 0.8; 
-
-            if (!isFood && (day === 5 || day === 6)) {
-                if (hour === 21 && minute < 30) anchor = 2.5;
-                else if (hour === 21 && minute >= 30) { anchor = 7.5; skepticism = 0.5; }
-                else if (hour === 22 || hour === 23) { anchor = 12.5; skepticism = 0.5; }
-                else if (hour >= 0) anchor = 2.5;
-            }
-
-            if (isFood && (day === 4 || day === 5 || day === 6) && (hour >= 22 || hour < 2)) {
-                skepticism = 0.5; 
-            }
-
-            const decay = Math.max(0, (30 - elapsedMinutes) / 30);
-            const userWeight = (1 - skepticism) * decay;
-            const anchorWeight = 1 - userWeight;
-
-            const exactWait = (vouchedTime * userWeight) + (anchor * anchorWeight);
-            const lowerBound = Math.floor(exactWait / 5) * 5;
+            const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            const currentDay = dayNames[now.getDay()];
+            const currentHour = now.getHours();
             
-            if (lowerBound >= 60) return "60+";
-            return `${lowerBound}-${lowerBound + 5}`;
+            // 1. SLOTTING: Find current 30-min window
+            const hoursStr = currentHour.toString().padStart(2, '0');
+            const minutesStr = now.getMinutes() < 30 ? "00" : "30";
+            const baselineKey = `${currentDay}_${hoursStr}${minutesStr}`;
+
+            // 2. THE ANCHOR: Use expert baseline Map
+            const baselines = docData.historical_baselines || {};
+            const anchor = baselines[baselineKey] || 0; 
+
+            // 3. DEFINE PEAK WINDOW (Thu/Fri/Sat 9pm - 2am)
+            const isPeakDay = ["Thu", "Fri", "Sat"].includes(currentDay) || (currentDay === "Sun" && currentHour < 2);
+            const isPeakHour = (currentHour >= 21 || currentHour < 2);
+            const isPeakWindow = isPeakDay && isPeakHour;
+
+            // 4. GET FRESH REPORTS
+            const reports = docData.recent_reports || [];
+            const fiveMinsAgo = now.getTime() - (5 * 60 * 1000);
+            const fifteenMinsAgo = now.getTime() - (15 * 60 * 1000);
+            
+            const freshReports = reports.filter(r => {
+                const rTime = r.timestamp.toDate ? r.timestamp.toDate().getTime() : r.timestamp;
+                return rTime > fifteenMinsAgo;
+            });
+
+            if (freshReports.length === 0) return formatWaitDisplay(anchor);
+
+            let userConsensus = anchor;
+            const values = freshReports.map(r => r.value).sort((a, b) => a - b);
+            const medianReport = values[Math.floor(values.length / 2)];
+
+            // 5. THE GATEKEEPER LOGIC
+            if (isPeakWindow) {
+                // PEAK MODE: High priority to user reports
+                userConsensus = medianReport;
+            } else {
+                // OFF-PEAK MODE: Strict anti-troll filter
+                const superFresh = freshReports.filter(r => {
+                    const rTime = r.timestamp.toDate ? r.timestamp.toDate().getTime() : r.timestamp;
+                    return rTime > fiveMinsAgo;
+                });
+
+                // Check for consensus among a group of 3+
+                const isConsistent = superFresh.length >= 3 && (Math.max(...superFresh.map(r => r.value)) - Math.min(...superFresh.map(r => r.value)) <= 5);
+
+                if (isConsistent) {
+                    userConsensus = medianReport; // Validated group overrules baseline
+                } else {
+                    userConsensus = anchor; // Solo reports are ignored outside peak hours
+                }
+            }
+
+            // 6. DRIFT CALCULATION
+            const latestTS = Math.max(...freshReports.map(r => r.timestamp.toDate ? r.timestamp.toDate().getTime() : r.timestamp));
+            const minsOld = (now.getTime() - latestTS) / 60000;
+            const trustWeight = Math.max(0, (60 - minsOld) / 60);
+
+            const finalValue = (userConsensus * trustWeight) + (anchor * (1 - trustWeight));
+            return formatWaitDisplay(finalValue);
+        }
+
+        function formatWaitDisplay(value) {
+            const final = Math.floor(value / 5) * 5;
+            return final >= 60 ? "60+" : `${final}-${final + 5}`;
         }
 
         function openDeals(venueName, encodedDeal) {
@@ -1207,8 +1242,7 @@
             const isLocked = cooldown && Date.now() < parseInt(cooldown);
 
             v.forEach((data) => {
-                const rawWait = data.wait_time || 0;
-                const waitRange = calculateDynamicWait(rawWait, data.last_updated, isFood, data);
+                const waitRange = calculateDynamicWait(data);
                 const minutes = parseInt(waitRange.split('-')[0]) || 0;
                 const closed = (data.ai_reason || "").toLowerCase().includes("closed");
                 const dealValue = data.current_deal ? encodeURIComponent(data.current_deal) : "";
@@ -1254,12 +1288,30 @@
         
         window.reportIntel = async function(col, docId, newTime) {
             if(!auth.currentUser) return;
-            const expiry = Date.now() + (5 * 60 * 1000);
-            localStorage.setItem('vouch_cooldown', expiry);
-            localStorage.setItem('vouched_venue_id', docId);
-            lastUpdatedVenueId = docId;
-            renderCurrentLists();
-            await db.collection("universities").doc(uniId).collection(col).doc(docId).update({ wait_time: newTime, last_updated: firebase.firestore.FieldValue.serverTimestamp() });
+
+            const reportEntry = {
+                value: parseInt(newTime),
+                timestamp: firebase.firestore.Timestamp.now(),
+                user: auth.currentUser.uid
+            };
+
+            const docRef = db.collection("universities").doc(uniId).collection(col).doc(docId);
+            
+            try {
+                await docRef.update({
+                    recent_reports: firebase.firestore.FieldValue.arrayUnion(reportEntry),
+                    wait_time: newTime, 
+                    last_updated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                const expiry = Date.now() + (5 * 60 * 1000);
+                localStorage.setItem('vouch_cooldown', expiry);
+                localStorage.setItem('vouched_venue_id', docId);
+                lastUpdatedVenueId = docId;
+                renderCurrentLists();
+            } catch (error) {
+                console.error("Error reporting intel:", error);
+            }
         };
 
         function startVisualReset(venueId, expiry) {

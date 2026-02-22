@@ -1156,24 +1156,32 @@
             const storageRef = storage.ref().child(path);
             
             try {
-                alert("Uploading Intel...");
-                await storageRef.put(file);
-                const url = await storageRef.getDownloadURL();
+                console.log("Starting Mobile Upload...");
+                const metadata = { cacheControl: 'public,max-age=300' };
+                const snapshot = await storageRef.put(file, metadata);
+                
+                // FORCE wait for the permanent Download URL
+                const url = await snapshot.ref.getDownloadURL();
                 
                 await db.collection("universities").doc(uniId).collection(currentColForPhoto).doc(currentVenueForPhoto).update({
                     line_photo_url: url,
                     line_photo_timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Intel Verified.");
+                
+                alert("INTEL VERIFIED: Photo is now live.");
+                location.reload(); 
             } catch (err) { 
-                console.error(err);
-                alert("Verification failed. Check network."); 
+                console.error("Upload Error:", err);
+                alert("Verification failed: " + err.message); 
             }
         }
 
         function viewPhoto(name, url, ts) {
-            document.getElementById('photo-venue-title').innerText = name;
-            document.getElementById('line-photo-img').src = url;
+            // Hardened Cache Buster for Mobile
+            const cacheBuster = url.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
+            
+            document.getElementById('photo-venue-title').innerText = name.toUpperCase();
+            document.getElementById('line-photo-img').src = url + cacheBuster;
             document.getElementById('photo-time-label').innerText = "TAKEN: " + formatTimeAgo(ts);
             document.getElementById('photo-modal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -1210,10 +1218,8 @@
                 const hasPhoto = data.line_photo_url && data.line_photo_url !== "";
                 let photoIcon = "";
                 
-                // Admins see Camera to Update; Students see Eye IF a photo exists; Admins ALWAYS see camera
                 if (isAdmin) {
                     photoIcon = `<span class="photo-trigger" onclick="triggerCamera('${collectionName}', '${data.id}')">📷</span>`;
-                    // If photo also exists, add eye so admins can view it too
                     if (hasPhoto) {
                         photoIcon += `<span class="photo-trigger" style="margin-left:8px" onclick="viewPhoto('${data.name}', '${data.line_photo_url}', '${data.line_photo_timestamp}')">👁️</span>`;
                     }

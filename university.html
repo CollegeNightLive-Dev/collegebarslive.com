@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -534,6 +534,7 @@
             display: flex; 
             flex-direction: column;
             transition: all 0.3s ease;
+            cursor: pointer; /* CARD IS NOW CLICKABLE */
         }
 
         .intel-card:hover {
@@ -646,40 +647,6 @@
             color: var(--flag-red); 
         }
 
-        .replies-list { 
-            margin-top: 16px; 
-            padding-left: 0px; 
-        }
-
-        .reply-item {
-            font-size: 13px; 
-            margin-bottom: 16px; 
-            padding-left: 16px;
-            border-left: 2px solid rgba(255,255,255,0.08);
-        }
-
-        .reply-meta {
-            font-size: 10px; 
-            color: var(--text-dim); 
-            text-transform: none;
-            margin-bottom: 6px; 
-            display: flex; 
-            align-items: center; 
-            gap: 5px;
-        }
-
-        .view-more-replies {
-            background: rgba(255,255,255,0.05); 
-            border: none; 
-            color: var(--accent-color);
-            font-size: 10px; 
-            font-weight: 700; 
-            border-radius: 6px;
-            cursor: pointer; 
-            margin-top: 8px; 
-            padding: 4px 10px;
-        }
-
         .view-more-posts-btn {
             width: 100%; 
             padding: 16px; 
@@ -697,95 +664,6 @@
 
         .view-more-posts-btn:hover { 
             background: rgba(255,255,255,0.1); 
-        }
-
-        .reply-input-box { 
-            display: none; 
-            margin-top: 12px; 
-        }
-
-        .reply-input-box.active { 
-            display: block; 
-        }
-
-        .reply-input-box textarea {
-            width: 100%; 
-            background: #1c1c1e; 
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px; 
-            color: #fff; 
-            padding: 12px; 
-            font-size: 13px;
-            outline: none; 
-            resize: none; 
-            box-sizing: border-box;
-        }
-
-        .reply-submit-btn {
-            background: var(--accent-color); 
-            color: #000; 
-            border: none;
-            padding: 6px 16px; 
-            border-radius: 20px; 
-            font-size: 11px;
-            font-weight: 700; 
-            cursor: pointer; 
-            margin-top: 8px; 
-            float: right;
-        }
-
-        /* --- NEW SAFETY UI ELEMENTS --- */
-        .circle-setup-card { 
-            background: var(--intel-card); 
-            border: 1px solid var(--border-gray); 
-            border-radius: 20px; 
-            padding: 40px; 
-            max-width: 450px; 
-            margin: 0 auto; 
-            text-align: center; 
-        }
-
-        .setup-btn { 
-            background: var(--accent-color); 
-            color: #000; 
-            border: none; 
-            padding: 12px 24px; 
-            border-radius: 12px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            margin-bottom: 20px; 
-            width: 100%; 
-            text-transform: uppercase; 
-        }
-
-        .active-circle-banner { 
-            background: var(--accent-color); 
-            color: #000; 
-            padding: 15px; 
-            border-radius: 12px; 
-            margin-bottom: 30px; 
-            font-weight: 800; 
-            letter-spacing: 1px; 
-            text-align: center; 
-        }
-
-        .member-item { 
-            display: flex; 
-            flex-direction: column; 
-            padding: 10px 0; 
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-            text-align: left; 
-        }
-
-        .member-name { 
-            font-size: 13px; 
-            font-weight: 700; 
-            color: #fff; 
-        }
-
-        .member-email { 
-            font-size: 11px; 
-            color: var(--text-dim); 
         }
 
         /* Beacon UI Styles */
@@ -890,7 +768,7 @@
         </svg>
         <div class="bouncer-text">
             <h2>Action Required</h2>
-            <p>Snapchat and Instagram block our secure Google Login system to track you.</p>
+            <p>Snapchat and Instagram block our secure Google Login system.</p>
             <p class="bouncer-highlight">
                 Tap the <strong>•••</strong> icon up top and select<br><br>
                 <span>"Open in Safari"</span> <br>or<br> <span>"Open in Browser"</span><br><br>to enter the live feed.
@@ -965,22 +843,22 @@
                 </p>
                 <div class="beacon-grid">
                     <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-blue);">
-                        <span class="coming-soon-tag">Soon</span>
+                        <span class="coming-soon-tag">Coming Soon</span>
                         <span class="tier-icon">📍</span>
                         <span class="beacon-label" style="color: var(--tier-blue);">Check In</span>
                     </div>
                     <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-yellow);">
-                        <span class="coming-soon-tag">Soon</span>
+                        <span class="coming-soon-tag">Coming Soon</span>
                         <span class="tier-icon">🔦</span>
                         <span class="beacon-label" style="color: var(--tier-yellow);">Lost</span>
                     </div>
                     <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-orange);">
-                        <span class="coming-soon-tag">Soon</span>
+                        <span class="coming-soon-tag">Coming Soon</span>
                         <span class="tier-icon">🚶‍♀️</span>
                         <span class="beacon-label" style="color: var(--tier-orange);">Walk With Me</span>
                     </div>
                     <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-red);">
-                        <span class="coming-soon-tag">Soon</span>
+                        <span class="coming-soon-tag">Coming Soon</span>
                         <span class="tier-icon">⚠️</span>
                         <span class="beacon-label" style="color: var(--tier-red);">Something's Off</span>
                     </div>
@@ -990,7 +868,7 @@
     </div>
 
     <div class="footer">
-        © 2026 Srikar Konda and Jackson Stevenson| <a href="terms.html">Terms & Privacy</a>
+        © 2026 Srikar Konda and Jackson Stevenson | <a href="terms.html">Terms & Privacy</a>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -1033,46 +911,46 @@
         let currentBars = [], currentFood = [], lastUpdatedVenueId = null;
         let postLimit = 15;
 
-        // --- THE MISSING DECAY ALGORITHM (RESTORED) ---
-        function calculateDynamicWait(vouchedTime, lastUpdatedTimestamp) {
+        // --- SCALE-READY INDIVIDUAL ANCHOR ALGORITHM ---
+        function calculateDynamicWait(vouchedTime, lastUpdatedTimestamp, isFood, venueData) {
             if (!lastUpdatedTimestamp) return "0-5";
 
             const now = new Date();
-            const lastUpdated = typeof lastUpdatedTimestamp.toDate === 'function' ? lastUpdatedTimestamp.toDate() : new Date(lastUpdatedTimestamp);
+            const lastUpdated = lastUpdatedTimestamp.toDate ? lastUpdatedTimestamp.toDate() : new Date(lastUpdatedTimestamp);
             const elapsedMinutes = Math.max(0, (now - lastUpdated) / (1000 * 60));
 
             const day = now.getDay();
             const hour = now.getHours();
+            const minute = now.getMinutes();
 
-            const isPeakNight = (day === 4 || day === 5 || day === 6) && (hour >= 20 || hour < 3);
-            const isSunToThursDay = (day >= 0 && day <= 4) && (hour >= 6 && hour < 18);
-            
-            let baseline = 0;
-            let decayRate = 1;
+            let anchor = venueData.historical_baseline || 0;
+            let skepticism = 0.8; 
 
-            if (isPeakNight) {
-                baseline = 10;
-                decayRate = Math.min(1, elapsedMinutes / 120);
-            } else if (isSunToThursDay) {
-                baseline = 0;
-                decayRate = Math.min(1, elapsedMinutes / 30);
-            } else {
-                baseline = 0;
-                decayRate = Math.min(1, elapsedMinutes / 60);
+            if (!isFood && (day === 5 || day === 6)) {
+                if (hour === 21 && minute < 30) anchor = 2.5;
+                else if (hour === 21 && minute >= 30) { anchor = 7.5; skepticism = 0.5; }
+                else if (hour === 22 || hour === 23) { anchor = 12.5; skepticism = 0.5; }
+                else if (hour >= 0) anchor = 2.5;
             }
 
-            const currentWait = Math.round(vouchedTime * (1 - decayRate) + baseline * decayRate);
-            const lowerBound = Math.floor(currentWait / 5) * 5;
-            const upperBound = lowerBound + 5;
+            if (isFood && (day === 4 || day === 5 || day === 6) && (hour >= 22 || hour < 2)) {
+                skepticism = 0.5; 
+            }
 
+            const decay = Math.max(0, (30 - elapsedMinutes) / 30);
+            const userWeight = (1 - skepticism) * decay;
+            const anchorWeight = 1 - userWeight;
+
+            const exactWait = (vouchedTime * userWeight) + (anchor * anchorWeight);
+            const lowerBound = Math.floor(exactWait / 5) * 5;
+            
             if (lowerBound >= 60) return "60+";
-            return `${lowerBound}-${upperBound}`;
+            return `${lowerBound}-${lowerBound + 5}`;
         }
-        // ----------------------------------------------
 
         function openDeals(venueName, encodedDeal) {
             document.getElementById('modal-venue-name').innerText = venueName.toUpperCase();
-            const dealText = encodedDeal ? decodeURIComponent(encodedDeal) : "No special deals reported right now. Check back soon!";
+            const dealText = encodedDeal ? decodeURIComponent(encodedDeal) : "Contact us at partners@collegenightlive.com if you would like to have your deals posted here.";
             document.getElementById('modal-deal-text').innerText = dealText;
             document.getElementById('deals-modal').style.display = 'flex';
         }
@@ -1107,17 +985,11 @@
             if (!timestamp) return "now";
             const date = (typeof timestamp.toDate === 'function') ? timestamp.toDate() : new Date(timestamp);
             const seconds = Math.floor((new Date() - date) / 1000);
-            let interval = seconds / 31536000;
-            if (interval > 1) return Math.floor(interval) + "y";
-            interval = seconds / 2592000;
-            if (interval > 1) return Math.floor(interval) + "mo";
-            interval = seconds / 86400;
-            if (interval > 1) return Math.floor(interval) + "d";
-            interval = seconds / 3600;
+            if (seconds < 60) return "now";
+            let interval = seconds / 3600;
             if (interval > 1) return Math.floor(interval) + "h";
             interval = seconds / 60;
-            if (interval > 1) return Math.floor(interval) + "m";
-            return "now";
+            return Math.floor(interval) + "m";
         }
 
         auth.onAuthStateChanged(async (user) => {
@@ -1130,13 +1002,7 @@
                 if (userNav) userNav.style.display = 'flex';
                 document.getElementById('user-display-name').innerText = user.displayName.toUpperCase();
                 document.getElementById('school-selector').value = uniId;
-
-                // INIT SAFETY CIRCLE
-                const userDoc = await db.collection("users").doc(user.uid).get();
-                if (userDoc.exists && userDoc.data().active_circle_id) {
-                    initCircleListener(userDoc.data().active_circle_id);
-                }
-
+                initFeedListener();
             } else {
                 document.body.classList.add('logged-out');
                 if (loginOverlay) loginOverlay.style.display = 'flex';
@@ -1144,32 +1010,54 @@
             }
         });
 
-        // STANDARD POPUP LOGIN WITH ACCOUNT SELECTION (RESTORED FIX)
         function loginWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             provider.setCustomParameters({ prompt: 'select_account' });
-            
-            auth.signInWithPopup(provider).catch(err => {
-                console.error("Popup failed:", err);
-                alert(`Login failed: ${err.message}. Please check if popups are blocked on your device.`);
-            });
+            auth.signInWithPopup(provider);
         }
 
         function changeSchool(newUni) { window.location.href = `university.html?uni=${newUni}`; }
         function handleMainPostKey(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitIntel(); } }
-        function handleReplyKey(e, postId, parentReplyId) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitReply(postId, parentReplyId); } }
 
+        // --- YIK YAK STYLE ANONYMOUS ARCHITECTURE ---
         async function submitIntel() {
             const content = document.getElementById('intelInput').value.trim();
             if (!content || !auth.currentUser) return;
             const expiryDate = new Date(Date.now() + (8 * 60 * 60 * 1000));
             await db.collection("intel_posts").add({
-                university_id: uniId, content: content, user_id: auth.currentUser.uid,
-                user_name: auth.currentUser.displayName, upvotes: 1, flags: 0,
+                university_id: uniId,
+                content: content,
+                user_id: auth.currentUser.uid, 
+                alias: "ANONYMOUS", 
+                upvotes: 1,
+                flags: 0,
+                comment_count: 0,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                 deleteAt: firebase.firestore.Timestamp.fromDate(expiryDate)
             });
             document.getElementById('intelInput').value = "";
+        }
+
+        async function votePost(docId, change, event) {
+            if(!auth.currentUser) return;
+            if (event) event.stopPropagation(); // PREVENTS REDIRECT WHEN VOTING
+            const voteKey = `voted_${docId}`;
+            if(localStorage.getItem(voteKey)) return; 
+
+            localStorage.setItem(voteKey, 'true'); 
+            await db.collection("intel_posts").doc(docId).update({
+                upvotes: firebase.firestore.FieldValue.increment(change)
+            });
+        }
+
+        async function flagPost(docId, event) { 
+            if (event) event.stopPropagation();
+            if(!confirm("Flag post?")) return; 
+            await db.collection("intel_posts").doc(docId).update({ flags: firebase.firestore.FieldValue.increment(1) }); 
+        }
+
+        function openThread(postId) {
+            window.location.href = `post.html?id=${postId}&uni=${uniId}`;
         }
 
         function loadMorePosts() { postLimit += 15; initFeedListener(); }
@@ -1195,116 +1083,35 @@
                     feed.innerHTML = "";
                     displayPosts.forEach(data => {
                         const card = document.createElement('div'); card.className = 'intel-card';
+                        card.onclick = () => openThread(data.id); // MAKE CARD CLICKABLE
                         card.innerHTML = `
                             <div class="card-main">
                                 <div class="vote-sidebar">
-                                    <button class="vote-btn" onclick="votePost('${data.id}', 1)">▲</button>
-                                    <span class="vote-count">${data.upvotes || 0}</span>
-                                    <button class="vote-btn" onclick="votePost('${data.id}', -1)">▼</button>
+                                    <button class="vote-btn" onclick="votePost('${data.id}', 1, event)">▲</button>
+                                    <span class="vote-count" id="vote-count-${data.id}">${data.upvotes || 0}</span>
+                                    <button class="vote-btn" onclick="votePost('${data.id}', -1, event)">▼</button>
                                 </div>
                                 <div class="intel-content">
-                                    <div class="intel-meta">
-                                        <strong>${data.user_name || 'Anonymous'}</strong>
-                                        <span class="timestamp-tag">• ${formatTimeAgo(data.timestamp)}</span>
-                                    </div>
+                                    <div class="intel-meta"><strong>${data.alias}</strong> • ${formatTimeAgo(data.timestamp)}</div>
                                     <div class="intel-text">${data.content}</div>
                                     <div class="intel-actions">
-                                        <button class="reply-trigger" onclick="toggleReplyBox('${data.id}', 'main')">Reply</button>
-                                        <button class="flag-btn" onclick="flagPost('${data.id}')">Flag</button>
+                                        <button class="reply-trigger">💬 ${data.comment_count || 0} Comments</button>
+                                        <button class="flag-btn" onclick="flagPost('${data.id}', event)">Flag</button>
                                     </div>
-                                    <div id="reply-box-${data.id}-main" class="reply-input-box">
-                                        <textarea id="reply-input-${data.id}-main" placeholder="Type your reply..." onkeydown="handleReplyKey(event, '${data.id}', 'main')"></textarea>
-                                        <button class="reply-submit-btn" onclick="submitReply('${data.id}', 'main')">Reply</button>
-                                    </div>
-                                    <div id="replies-${data.id}" class="replies-list"></div>
                                 </div>
                             </div>`;
                         feed.appendChild(card);
-                        listenForReplies(data.id);
                     });
                 });
         }
-        initFeedListener();
 
-        function toggleReplyBox(postId, replyId) {
-            const box = document.getElementById(`reply-box-${postId}-${replyId}`);
-            if (box) box.classList.toggle('active');
-        }
-
-        async function submitReply(postId, parentId) {
-            const input = document.getElementById(`reply-input-${postId}-${parentId}`);
-            const content = input.value.trim();
-            if (!content || !auth.currentUser) return;
-            await db.collection("intel_posts").doc(postId).collection("replies").add({
-                content: content, user_name: auth.currentUser.displayName,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                parent_id: parentId
-            });
-            input.value = ""; toggleReplyBox(postId, parentId);
-        }
-
-        function toggleChainVisibility(chainId) {
-            const el = document.getElementById(chainId);
-            const btn = document.getElementById('btn-' + chainId);
-            if (el.style.display === 'none') { el.style.display = 'block'; btn.innerText = "Show Less"; }
-            else { el.style.display = 'none'; btn.innerText = "View More Replies"; }
-        }
-
-        function listenForReplies(postId) {
-            db.collection("intel_posts").doc(postId).collection("replies").orderBy("timestamp", "asc").onSnapshot(snapshot => {
-                const container = document.getElementById(`replies-${postId}`);
-                if (!container) return;
-                const allReplies = [];
-                snapshot.forEach(doc => allReplies.push({ id: doc.id, ...doc.data() }));
-                
-                function buildTree(parentID, list) {
-                    const children = list.filter(r => r.parent_id === parentID);
-                    if (children.length === 0) return "";
-                    const firstChild = children[0];
-                    let html = `<div class="reply-item">
-                                    <div class="reply-meta"><strong>${firstChild.user_name || 'Anonymous'}</strong> <span class="timestamp-tag">• ${formatTimeAgo(firstChild.timestamp)}</span></div>
-                                    <div>${firstChild.content}</div>
-                                    <button class="reply-trigger" style="margin-top:6px;" onclick="toggleReplyBox('${postId}', '${firstChild.id}')">Reply</button>
-                                    <div id="reply-box-${postId}-${firstChild.id}" class="reply-input-box">
-                                        <textarea id="reply-input-${postId}-${firstChild.id}" placeholder="Reply to this..." onkeydown="handleReplyKey(event, '${postId}', '${firstChild.id}')"></textarea>
-                                        <button class="reply-submit-btn" onclick="submitReply('${postId}', '${firstChild.id}')">Reply</button>
-                                    </div>
-                                    ${buildTree(firstChild.id, list)}
-                                </div>`;
-                    if (children.length > 1) {
-                        const chainId = `chain-${postId}-${parentID}`;
-                        html += `<button id="btn-${chainId}" class="view-more-replies" onclick="toggleChainVisibility('${chainId}')">View More Replies</button>
-                                 <div id="${chainId}" style="display:none;">${children.slice(1).map(r => `<div class="reply-item"><div class="reply-meta"><strong>${r.user_name || 'Anonymous'}</strong> <span class="timestamp-tag">• ${formatTimeAgo(r.timestamp)}</span></div><div>${r.content}</div><button class="reply-trigger" style="margin-top:6px;" onclick="toggleReplyBox('${postId}', '${r.id}')">Reply</button><div id="reply-box-${postId}-${r.id}" class="reply-input-box"><textarea id="reply-input-${postId}-${r.id}" placeholder="Reply to this..." onkeydown="handleReplyKey(event, '${postId}', '${r.id}')"></textarea><button class="reply-submit-btn" onclick="submitReply('${postId}', '${r.id}')">Reply</button></div>${buildTree(r.id, list)}</div>`).join('')}</div>`;
-                    }
-                    return html;
-                }
-                container.innerHTML = buildTree('main', allReplies);
-            });
-        }
-
-        async function votePost(docId, change) {
-            if(!auth.currentUser) return;
-            const postRef = db.collection("intel_posts").doc(docId);
-            try {
-                await db.runTransaction(async (transaction) => {
-                    const postDoc = await transaction.get(postRef);
-                    if (!postDoc.exists) return;
-                    const newUpvotes = (postDoc.data().upvotes || 0) + change;
-                    transaction.update(postRef, { upvotes: newUpvotes });
-                });
-            } catch (err) { console.error("Transaction failed: ", err); }
-        }
-
-        async function flagPost(docId) { if(!confirm("Flag this post as inappropriate?")) return; await db.collection("intel_posts").doc(docId).update({ flags: firebase.firestore.FieldValue.increment(1) }); }
+        function renderCurrentLists() { renderList("bars-list", currentBars, false); renderList("food-list", currentFood, true); }
         
-        function renderCurrentLists() { renderList("bars-list", currentBars); renderList("food-list", currentFood); }
-        
-        function renderList(e, v) {
+        function renderList(e, v, isFood) {
             const list = document.getElementById(e); if (!list) return;
             v.sort((a, b) => a.name.localeCompare(b.name)); list.innerHTML = "";
-            const options = e === "food-list" ? [0, 5, 10, 15, 20, 25] : [0, 5, 15, 25, 40, 60];
-            const collectionName = e.includes('bars') ? 'bars' : 'food-joints';
-            const isFood = e === "food-list";
+            const options = isFood ? [0, 5, 10, 15, 20, 25] : [0, 5, 15, 25, 40, 60];
+            const collectionName = isFood ? 'food-joints' : 'bars';
             const affiliateLabel = isFood ? "Hungry?" : "Need a Ride?";
             const affiliateUrl = isFood ? "https://www.grubhub.com" : "https://www.lyft.com";
 
@@ -1313,12 +1120,9 @@
             const isLocked = cooldown && Date.now() < parseInt(cooldown);
 
             v.forEach((data) => {
-                
-                // MATH INJECTION: Call the decay algorithm
                 const rawWait = data.wait_time || 0;
-                const waitRange = calculateDynamicWait(rawWait, data.last_updated);
+                const waitRange = calculateDynamicWait(rawWait, data.last_updated, isFood, data);
                 const minutes = parseInt(waitRange.split('-')[0]) || 0;
-
                 const closed = (data.ai_reason || "").toLowerCase().includes("closed");
                 const dealValue = data.current_deal ? encodeURIComponent(data.current_deal) : "";
                 
@@ -1335,24 +1139,11 @@
                 if (closed) { fillWidth = 100; statusColor = "var(--status-closed)"; }
                 
                 const row = document.createElement("div"); row.className = `row-item ${data.id === lastUpdatedVenueId ? 'was-updated' : ''}`;
-                
-                let actionSection = "";
-                if (isLocked) {
-                    if (data.id === vouchedVenueId) {
-                        actionSection = `<div class="vouch-thanks-msg">✅ THANK YOU! <span class="cooldown-timer" id="timer-${data.id}"></span></div>`;
-                    } else {
-                        actionSection = "";
-                    }
-                } else {
-                    actionSection = `<div class="intel-options">${options.map(t => `<button onclick="reportIntel('${collectionName}', '${data.id}', ${t})">${t === 0 ? '0m' : (t === 25 && e === "food-list") ? '25m+' : (t === 60 && e === "bars-list") ? '60m+' : t + 'm'}</button>`).join('')}</div>`;
-                }
-
-                // Format the text specifically as "XX-XXm" or "CLOSED"
+                let actionSection = isLocked ? (data.id === vouchedVenueId ? `<div class="vouch-thanks-msg">✅ THANK YOU! <span class="cooldown-timer" id="timer-${data.id}"></span></div>` : "") : `<div class="intel-options">${options.map(t => `<button onclick="reportIntel('${collectionName}', '${data.id}', ${t})">${t === 0 ? '0m' : (t === 25 && isFood) ? '25m+' : (t === 60 && !isFood) ? '60m+' : t + 'm'}</button>`).join('')}</div>`;
                 const displayString = closed ? "CLOSED" : (waitRange === "60+" ? "60+m" : waitRange + "m");
 
                 row.innerHTML = `<div class="row-top"><div class="venue-info"><div class="venue-name">${data.name}</div></div><div class="wait-time-text">${displayString}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section"><a href="${affiliateUrl}" target="_blank" class="affiliate-link-btn">${affiliateLabel}</a><button class="deals-btn" onclick="openDeals('${data.name.replace(/'/g, "\\'")}', '${dealValue}')">Deals</button>${actionSection}</div>`;
                 list.appendChild(row);
-                
                 if (isLocked && data.id === vouchedVenueId) startVisualReset(data.id, parseInt(cooldown));
             });
         }
@@ -1367,10 +1158,7 @@
             localStorage.setItem('vouched_venue_id', docId);
             lastUpdatedVenueId = docId;
             renderCurrentLists();
-            await db.collection("universities").doc(uniId).collection(col).doc(docId).update({
-                wait_time: newTime,
-                last_updated: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            await db.collection("universities").doc(uniId).collection(col).doc(docId).update({ wait_time: newTime, last_updated: firebase.firestore.FieldValue.serverTimestamp() });
         };
 
         function startVisualReset(venueId, expiry) {
@@ -1378,11 +1166,7 @@
             const update = () => {
                 const now = Date.now();
                 const diff = expiry - now;
-                if (diff <= 0) {
-                    localStorage.removeItem('vouched_venue_id');
-                    renderCurrentLists();
-                    return;
-                }
+                if (diff <= 0) { localStorage.removeItem('vouched_venue_id'); renderCurrentLists(); return; }
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
                 if (timerEl) timerEl.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
@@ -1391,77 +1175,17 @@
             update();
         }
 
-        // --- SAFETY CIRCLE FUNCTIONS ---
-        async function createCircle() {
-            if (!auth.currentUser) return;
-            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const userObj = { uid: auth.currentUser.uid, name: auth.currentUser.displayName, email: auth.currentUser.email };
-            
-            await db.collection("circles").doc(code).set({
-                owner_uid: auth.currentUser.uid,
-                created_at: firebase.firestore.FieldValue.serverTimestamp(),
-                members: [userObj]
-            });
-
-            await db.collection("users").doc(auth.currentUser.uid).set({ active_circle_id: code }, { merge: true });
-            initCircleListener(code);
-        }
-
-        async function joinCircle() {
-            const code = document.getElementById('join-code-input').value.toUpperCase().trim();
-            if (!code || !auth.currentUser) return;
-
-            const circleRef = db.collection("circles").doc(code);
-            const doc = await circleRef.get();
-
-            if (doc.exists) {
-                const userObj = { uid: auth.currentUser.uid, name: auth.currentUser.displayName, email: auth.currentUser.email };
-                await circleRef.update({ members: firebase.firestore.FieldValue.arrayUnion(userObj) });
-                await db.collection("users").doc(auth.currentUser.uid).set({ active_circle_id: code }, { merge: true });
-                initCircleListener(code);
-            } else {
-                alert("Circle not found. Check the code.");
-            }
-        }
-
-        function initCircleListener(code) {
-            if (circleUnsubscribe) circleUnsubscribe();
-            activeCircleId = code;
-            
-            circleUnsubscribe = db.collection("circles").doc(code).onSnapshot(doc => {
-                if (doc.exists) {
-                    document.getElementById('circle-gate').style.display = 'none';
-                    document.getElementById('circle-active').style.display = 'block';
-                    document.getElementById('display-circle-code').innerText = code;
-
-                    const roster = document.getElementById('circle-members-roster');
-                    roster.innerHTML = "";
-                    doc.data().members.forEach(m => {
-                        const item = document.createElement('div');
-                        item.className = 'member-item';
-                        item.innerHTML = `<span class="member-name">${m.name}</span><span class="member-email">${m.email}</span>`;
-                        roster.appendChild(item);
-                    });
-                }
-            });
-        }
-
         async function triggerBeacon(type) {
-            if (!activeCircleId || !auth.currentUser) return;
+            if (!auth.currentUser) return;
             try {
                 const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
                 const mapsLink = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
                 const battery = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({level: 1}));
-                
                 await db.collection("safety_alerts").add({
-                    circle_id: activeCircleId,
-                    user_name: auth.currentUser.displayName,
-                    type: type,
-                    location: mapsLink,
-                    battery: Math.round(battery.level * 100),
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    user_name: auth.currentUser.displayName, type: type,
+                    location: mapsLink, battery: Math.round(battery.level * 100), timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert(`${type} Beacon sent to your circle!`);
+                alert(`${type} Beacon sent!`);
             } catch (err) { alert("Enable GPS to send beacons."); }
         }
 

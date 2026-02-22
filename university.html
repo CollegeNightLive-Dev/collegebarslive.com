@@ -331,10 +331,24 @@
             margin-bottom: 12px; 
         }
 
+        .venue-name-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .venue-name { 
             font-size: 17px; 
             font-weight: 500; 
         }
+
+        .photo-trigger {
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+        .photo-trigger:hover { opacity: 1; }
 
         .wait-time-text { 
             font-size: 14px; 
@@ -470,6 +484,12 @@
             letter-spacing: 1px; 
             width: 100%; 
         }
+
+        /* PHOTO MODAL SPECIFIC */
+        .photo-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 10000; padding: 20px; box-sizing: border-box; }
+        .photo-modal-card { width: 100%; max-width: 400px; text-align: center; }
+        #line-photo-img { width: 100%; border-radius: 12px; border: 1px solid var(--border-gray); margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-timestamp { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 20px; display: block; letter-spacing: 1px; }
 
         /* LIVE FEED */
         .reddit-container { 
@@ -776,6 +796,17 @@
         </div>
     </div>
 
+    <div id="photo-modal" class="photo-modal-overlay" onclick="closePhotoModal()">
+        <div class="photo-modal-card" onclick="event.stopPropagation()">
+            <h3 id="photo-venue-title" style="font-size:12px; letter-spacing:2px; margin-bottom:15px; text-transform:uppercase;">LIVE LINE INTEL</h3>
+            <img id="line-photo-img" src="" alt="Line Intel">
+            <span id="photo-time-label" class="modal-timestamp"></span>
+            <button class="logout-btn" style="width:100%; padding:12px;" onclick="closePhotoModal()">BACK TO REFINERY</button>
+        </div>
+    </div>
+
+    <input type="file" id="cameraInput" accept="image/*" capture="camera" style="display:none;" onchange="handlePhotoUpload(event)">
+
     <div id="deals-modal" class="modal-overlay" onclick="closeDeals()">
         <div class="modal-card" onclick="event.stopPropagation()">
             <h3 id="modal-venue-name">VENUE DEALS</h3>
@@ -873,6 +904,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
     <script src="env.js"></script>
@@ -892,12 +924,16 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
+        const storage = firebase.storage();
         const functions = firebase.functions();
         const urlParams = new URLSearchParams(window.location.search);
         const uniId = urlParams.get('uni') || 'ohio-state';
+        const admins = ["srikar@collegenightlive.com", "jackson@collegenightlive.com", "srikarkonda2@gmail.com"];
 
         let activeCircleId = null;
         let circleUnsubscribe = null;
+        let currentVenueForPhoto = null;
+        let currentColForPhoto = null;
 
         function setSchoolTheme(id) {
             const themes = { 'ohio-state': '#ba0c2f', 'miami-oh': '#c41230', 'cincinnati': '#e00122', 'purdue': '#ceb888', 'ohio-university': '#2e4d30' };
@@ -1105,6 +1141,49 @@
                 });
         }
 
+        // --- PHOTO HANDLERS ---
+        function triggerCamera(col, id) { 
+            currentVenueForPhoto = id; 
+            currentColForPhoto = col; 
+            document.getElementById('cameraInput').click(); 
+        }
+
+        async function handlePhotoUpload(event) {
+            const file = event.target.files[0]; 
+            if (!file || !currentVenueForPhoto) return;
+            
+            const path = `venue_photos/${uniId}/${currentVenueForPhoto}.jpg`;
+            const storageRef = storage.ref().child(path);
+            
+            try {
+                alert("Uploading Intel...");
+                await storageRef.put(file);
+                const url = await storageRef.getDownloadURL();
+                
+                await db.collection("universities").doc(uniId).collection(currentColForPhoto).doc(currentVenueForPhoto).update({
+                    line_photo_url: url,
+                    line_photo_timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert("Intel Verified.");
+            } catch (err) { 
+                console.error(err);
+                alert("Verification failed. Check network."); 
+            }
+        }
+
+        function viewPhoto(name, url, ts) {
+            document.getElementById('photo-venue-title').innerText = name;
+            document.getElementById('line-photo-img').src = url;
+            document.getElementById('photo-time-label').innerText = "TAKEN: " + formatTimeAgo(ts);
+            document.getElementById('photo-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePhotoModal() { 
+            document.getElementById('photo-modal').style.display = 'none'; 
+            document.body.style.overflow = 'auto';
+        }
+
         function renderCurrentLists() { renderList("bars-list", currentBars, false); renderList("food-list", currentFood, true); }
         
         function renderList(e, v, isFood) {
@@ -1126,6 +1205,22 @@
                 const closed = (data.ai_reason || "").toLowerCase().includes("closed");
                 const dealValue = data.current_deal ? encodeURIComponent(data.current_deal) : "";
                 
+                // PHOTO ICON LOGIC
+                const isAdmin = auth.currentUser && admins.includes(auth.currentUser.email);
+                const hasPhoto = data.line_photo_url && data.line_photo_url !== "";
+                let photoIcon = "";
+                
+                // Admins see Camera to Update; Students see Eye IF a photo exists; Admins ALWAYS see camera
+                if (isAdmin) {
+                    photoIcon = `<span class="photo-trigger" onclick="triggerCamera('${collectionName}', '${data.id}')">📷</span>`;
+                    // If photo also exists, add eye so admins can view it too
+                    if (hasPhoto) {
+                        photoIcon += `<span class="photo-trigger" style="margin-left:8px" onclick="viewPhoto('${data.name}', '${data.line_photo_url}', '${data.line_photo_timestamp}')">👁️</span>`;
+                    }
+                } else if (hasPhoto) {
+                    photoIcon = `<span class="photo-trigger" onclick="viewPhoto('${data.name}', '${data.line_photo_url}', '${data.line_photo_timestamp}')">👁️</span>`;
+                }
+
                 let fillWidth = 0; let statusColor = "var(--wait-green)";
                 if (isFood) {
                     if (minutes <= 5) fillWidth = 25;
@@ -1142,7 +1237,7 @@
                 let actionSection = isLocked ? (data.id === vouchedVenueId ? `<div class="vouch-thanks-msg">✅ THANK YOU! <span class="cooldown-timer" id="timer-${data.id}"></span></div>` : "") : `<div class="intel-options">${options.map(t => `<button onclick="reportIntel('${collectionName}', '${data.id}', ${t})">${t === 0 ? '0m' : (t === 25 && isFood) ? '25m+' : (t === 60 && !isFood) ? '60m+' : t + 'm'}</button>`).join('')}</div>`;
                 const displayString = closed ? "CLOSED" : (waitRange === "60+" ? "60+m" : waitRange + "m");
 
-                row.innerHTML = `<div class="row-top"><div class="venue-info"><div class="venue-name">${data.name}</div></div><div class="wait-time-text">${displayString}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section"><a href="${affiliateUrl}" target="_blank" class="affiliate-link-btn">${affiliateLabel}</a><button class="deals-btn" onclick="openDeals('${data.name.replace(/'/g, "\\'")}', '${dealValue}')">Deals</button>${actionSection}</div>`;
+                row.innerHTML = `<div class="row-top"><div class="venue-name-group"><div class="venue-name">${data.name}</div>${photoIcon}</div><div class="wait-time-text">${displayString}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section"><a href="${affiliateUrl}" target="_blank" class="affiliate-link-btn">${affiliateLabel}</a><button class="deals-btn" onclick="openDeals('${data.name.replace(/'/g, "\\'")}', '${dealValue}')">Deals</button>${actionSection}</div>`;
                 list.appendChild(row);
                 if (isLocked && data.id === vouchedVenueId) startVisualReset(data.id, parseInt(cooldown));
             });

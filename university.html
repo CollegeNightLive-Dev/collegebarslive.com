@@ -25,6 +25,7 @@
             --intel-card: rgba(28, 28, 30, 0.6);
             --flag-red: #ff453a;
             --wait-green: #30d158;
+            --wait-green: #30d158;
             /* Tier Colors */
             --tier-blue: #0a84ff;
             --tier-yellow: #ffd60a;
@@ -857,13 +858,13 @@
     <div id="live-feed" class="tab-content">
         <div class="reddit-container">
             <div class="post-input-wrapper">
-                <textarea id="intelInput" placeholder="What's the word on campus?" onkeydown="handleMainPostKey(event)"></textarea>
+                <textarea id="intelInput" placeholder="Alert your campus of undercovers, strict bouncers, ect" onkeydown="handleMainPostKey(event)"></textarea>
                 <div class="post-actions"><button class="post-btn" onclick="submitIntel()">Post Intel</button></div>
             </div>
             <div id="intel-feed"></div>
             <button id="view-more-posts" class="view-more-posts-btn" style="display: none;" onclick="loadMorePosts()">Load More Intel</button>
         </div>
-    </div>
+    </div>  
 
     <div id="safety" class="tab-content">
         <div class="dashboard-container" style="text-align: center; justify-content: center; padding-top: 60px;">
@@ -1231,7 +1232,7 @@
         
         function renderList(e, v, isFood) {
             const list = document.getElementById(e); if (!list) return;
-            v.sort((a, b) => a.name.localeCompare(b.name)); list.innerHTML = "";
+            list.innerHTML = "";
             const options = isFood ? [0, 5, 10, 15, 20, 25] : [0, 5, 15, 25, 40, 60];
             const collectionName = isFood ? 'food-joints' : 'bars';
             const affiliateLabel = isFood ? "Hungry?" : "Need a Ride?";
@@ -1283,8 +1284,8 @@
             });
         }
         
-        db.collection("universities").doc(uniId).collection("bars").onSnapshot(snap => { currentBars = []; snap.forEach(doc => currentBars.push({ id: doc.id, ...doc.data() })); renderCurrentLists(); });
-        db.collection("universities").doc(uniId).collection("food-joints").onSnapshot(snap => { currentFood = []; snap.forEach(doc => currentFood.push({ id: doc.id, ...doc.data() })); renderCurrentLists(); });
+        db.collection("universities").doc(uniId).collection("bars").orderBy("display_order", "asc").onSnapshot(snap => { currentBars = []; snap.forEach(doc => currentBars.push({ id: doc.id, ...doc.data() })); renderCurrentLists(); });
+        db.collection("universities").doc(uniId).collection("food-joints").orderBy("display_order", "asc").onSnapshot(snap => { currentFood = []; snap.forEach(doc => currentFood.push({ id: doc.id, ...doc.data() })); renderCurrentLists(); });
         
         window.reportIntel = async function(col, docId, newTime) {
             if(!auth.currentUser) return;

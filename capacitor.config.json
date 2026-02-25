@@ -1,0 +1,6 @@
+{
+  "appId": "com.collegenightlive.app",
+  "appName": "College Night Live",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}

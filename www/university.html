@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Intel Feed | The Refinery</title>
+    <style>
+        :root {
+            --bg-black: #000000;
+            --border-gray: #1c1c1e;
+            --text-main: #ffffff;
+            --text-dim: #8e8e93;
+            --footer-text: #424245;
+            --accent-color: #ffffff; 
+            --wait-yellow: #ffd60a;
+            --wait-red: #ff453a;
+            --vouch-border: #2c2c2e;
+            --status-closed: #3a3a3c;
+            --intel-card: rgba(28, 28, 30, 0.6);
+            --flag-red: #ff453a;
+            --wait-green: #30d158;
+            /* Tier Colors */
+            --tier-blue: #0a84ff;
+            --tier-yellow: #ffd60a;
+            --tier-orange: #ff9f0a;
+            --tier-red: #ff453a;
+        }
+
+        body {
+            background-color: var(--bg-black); color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+            margin: 0; padding: 0; -webkit-font-smoothing: antialiased;
+            display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden;
+            animation: fadeIn 0.5s ease-out forwards; opacity: 0;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .user-nav-container { position: absolute; top: 20px; right: 24px; display: none; align-items: center; gap: 12px; z-index: 1001; }
+        .user-info-text { text-align: right; }
+        #user-display-name { font-size: 11px; font-weight: 800; color: var(--text-main); letter-spacing: 0.5px; margin-bottom: 2px; }
+        #school-selector { background: transparent; border: none; color: var(--accent-color); font-size: 9px; font-weight: 700; cursor: pointer; text-transform: uppercase; outline: none; padding: 0; }
+        .logout-btn { background: transparent; border: 1px solid var(--border-gray); color: var(--text-dim); font-size: 8px; font-weight: 700; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        .logout-btn:hover { border-color: var(--text-dim); color: var(--text-main); }
+
+        .tab-nav { display: flex; justify-content: center; gap: 20px; padding: 20px 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-gray); }
+        .tab-link { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 8px 12px; transition: all 0.3s ease; text-decoration: none; }
+        .tab-link.active { color: var(--text-main); border-bottom: 2px solid var(--accent-color); }
+
+        .tab-content { display: none; width: 100%; }
+        .tab-content.active { display: flex; flex-direction: column; align-items: center; }
+
+        header { text-align: center; padding: 60px 32px 30px; }
+        .header-title-wrapper { position: relative; display: inline-block; margin: 0 auto; }
+        header h1 { font-size: 28px; font-weight: 800; letter-spacing: 2px; margin: 0; text-transform: uppercase; display: inline-block; }
+        
+        .live-dot {
+            position: absolute; right: -22px; top: 50%; transform: translateY(-50%);
+            height: 10px; width: 10px; background-color: var(--accent-color); 
+            border-radius: 50%; box-shadow: 0 0 10px var(--accent-color);
+            animation: pulseAccent 2s infinite ease-in-out;
+        }
+        @keyframes pulseAccent { 0%, 100% { opacity: 0.2; transform: translateY(-50%) scale(0.9); } 50% { opacity: 1; transform: translateY(-50%) scale(1.1); } }
+
+        header p { font-size: 11px; color: var(--text-dim); margin-top: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; line-height: 1.6; max-width: 400px; margin-left: auto; margin-right: auto; }
+
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .login-btn { padding: 12px 24px; border-radius: 50px; border: none; background: #fff; color: #000; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem; }
+
+        .dashboard-container { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 0 32px 120px; box-sizing: border-box; flex: 1; }
+        .column { width: 100%; max-width: 500px; margin-bottom: 60px; }
+        .column-header h2 { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border-gray); }
+
+        .row-item { margin-bottom: 40px; width: 100%; }
+        .row-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .venue-name { font-size: 17px; font-weight: 500; }
+        .wait-time-text { font-size: 14px; font-weight: 600; }
+        .bar-container { width: 100%; height: 3px; background-color: var(--border-gray); border-radius: 2px; overflow: hidden; margin-bottom: 18px; }
+        .bar-fill { height: 100%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease; }
+
+        .vouch-section { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .affiliate-link-btn, .deals-btn { background: transparent; color: var(--text-main); border: 1px solid var(--vouch-border); padding: 4px 10px; border-radius: 6px; font-size: 9px; font-weight: 600; text-transform: uppercase; cursor: pointer; text-decoration: none; transition: 0.2s; white-space: nowrap; }
+        .deals-btn { border-color: var(--vouch-border); color: var(--text-main); }
+        
+        .intel-options { display: flex; gap: 8px; flex: 1; justify-content: flex-start; }
+        .intel-options button { background: transparent; color: var(--text-dim); border: none; font-size: 10px; font-weight: 600; cursor: pointer; padding: 2px 4px; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 10000; }
+        .modal-card { background: var(--intel-card); border: 1px solid var(--border-gray); border-radius: 16px; padding: 32px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-card h3 { margin: 0 0 15px; font-size: 18px; color: var(--wait-green); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; }
+        .modal-card p { font-size: 14px; color: var(--text-main); line-height: 1.6; margin-bottom: 25px; font-weight: 500; }
+        .close-modal { background: #ffffff; color: #000000; border: none; padding: 12px 30px; border-radius: 30px; font-weight: 800; font-size: 11px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; width: 100%; }
+
+        /* LIVE FEED: APPLE SLEEK REDESIGN */
+        .reddit-container { width: 100%; max-width: 500px; padding: 0 20px 100px; box-sizing: border-box; }
+        
+        .post-input-wrapper { 
+            background: rgba(28, 28, 30, 0.7); 
+            backdrop-filter: blur(20px);
+            border-radius: 18px; 
+            padding: 16px; 
+            margin-bottom: 40px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .post-input-wrapper textarea { 
+            width: 100%; background: transparent; border: none; color: #fff; 
+            resize: none; outline: none; font-size: 15px; min-height: 50px; 
+            font-family: inherit; font-weight: 400;
+        }
+        .post-actions { display: flex; justify-content: flex-end; margin-top: 12px; }
+        .post-btn { 
+            background: var(--accent-color); color: #000; 
+            font-weight: 700; border: none; padding: 8px 18px; 
+            border-radius: 20px; font-size: 12px; cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .post-btn:active { transform: scale(0.96); }
+
+        .intel-card { 
+            background: var(--intel-card); 
+            backdrop-filter: blur(15px);
+            border-radius: 20px; 
+            padding: 20px; 
+            margin-bottom: 16px; 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            display: flex; flex-direction: column;
+            transition: all 0.3s ease;
+        }
+        .intel-card:hover {
+            background: rgba(44, 44, 46, 0.6);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .card-main { display: flex; gap: 16px; width: 100%; }
+        
+        /* Sleek Pill Vote Bar */
+        .vote-sidebar { 
+            display: flex; flex-direction: column; align-items: center; 
+            gap: 4px; min-width: 34px; background: rgba(255,255,255,0.05);
+            border-radius: 20px; padding: 6px 0; height: fit-content;
+        }
+        .vote-btn { 
+            background: none; border: none; color: var(--text-dim); 
+            font-size: 14px; cursor: pointer; transition: 0.2s; 
+            padding: 4px; line-height: 1; 
+        }
+        .vote-btn:hover { color: var(--accent-color); }
+        .vote-count { font-size: 12px; font-weight: 700; color: var(--text-main); }
+        
+        .intel-content { flex: 1; }
+        .intel-meta { 
+            font-size: 11px; color: var(--text-dim); 
+            text-transform: none; margin-bottom: 6px; 
+            letter-spacing: -0.2px; display: flex; align-items: center; gap: 6px; 
+            font-weight: 500;
+        }
+        .intel-meta strong { color: var(--text-main); font-weight: 600; }
+        .timestamp-tag { color: var(--footer-text); font-weight: 500; font-size: 11px; }
+        
+        .intel-text { 
+            font-size: 16px; line-height: 1.5; margin-bottom: 16px; 
+            color: rgba(255,255,255,0.95); font-weight: 400;
+            letter-spacing: -0.1px;
+        }
+        
+        .intel-actions { 
+            display: flex; justify-content: flex-start; align-items: center; 
+            gap: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; 
+        }
+        .reply-trigger, .flag-btn { 
+            background: transparent; border: none; color: var(--text-dim); 
+            font-size: 11px; font-weight: 600; text-transform: none; 
+            cursor: pointer; padding: 0; transition: 0.2s;
+        }
+        .reply-trigger:hover { color: var(--text-main); }
+        .flag-btn:hover { color: var(--flag-red); }
+
+        .replies-list { margin-top: 16px; padding-left: 0px; }
+        .reply-item { 
+            font-size: 13px; margin-bottom: 16px; padding-left: 16px; 
+            border-left: 2px solid rgba(255,255,255,0.08); 
+        }
+        .reply-meta { 
+            font-size: 10px; color: var(--text-dim); text-transform: none; 
+            margin-bottom: 6px; display: flex; align-items: center; gap: 5px; 
+        }
+
+        .view-more-replies { 
+            background: rgba(255,255,255,0.05); border: none; color: var(--accent-color); 
+            font-size: 10px; font-weight: 700; border-radius: 6px;
+            cursor: pointer; margin-top: 8px; padding: 4px 10px; 
+        }
+        .view-more-posts-btn { 
+            width: 100%; padding: 16px; background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; 
+            color: var(--text-main); font-weight: 700; text-transform: none; 
+            font-size: 13px; cursor: pointer; margin-top: 24px; transition: 0.2s; 
+        }
+        .view-more-posts-btn:hover { background: rgba(255,255,255,0.1); }
+
+        .reply-input-box { display: none; margin-top: 12px; }
+        .reply-input-box.active { display: block; }
+        .reply-input-box textarea { 
+            width: 100%; background: #1c1c1e; border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 12px; color: #fff; padding: 12px; font-size: 13px; 
+            outline: none; resize: none; box-sizing: border-box;
+        }
+        .reply-submit-btn { 
+            background: var(--accent-color); color: #000; border: none; 
+            padding: 6px 16px; border-radius: 20px; font-size: 11px; 
+            font-weight: 700; cursor: pointer; margin-top: 8px; float: right; 
+        }
+
+        /* Beacon UI Styles */
+        .beacon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 400px; margin: 25px auto 0; }
+        .beacon-btn { 
+            position: relative; aspect-ratio: 1; border-radius: 16px; border: 1px solid var(--border-gray);
+            background: var(--intel-card); display: flex; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center; padding: 15px; cursor: pointer; transition: 0.3s;
+        }
+        .beacon-btn:hover { border-color: var(--text-dim); transform: scale(1.02); }
+        .beacon-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; }
+        .coming-soon-tag { 
+            position: absolute; top: 8px; right: 8px; font-size: 7px; font-weight: 900; 
+            background: #fff; color: #000; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;
+        }
+        .tier-icon { font-size: 24px; }
+
+        .footer { width: 100%; text-align: center; padding: 60px 0 40px; font-size: 0.7rem; color: var(--footer-text); }
+        .footer a { color: var(--footer-text); text-decoration: none; margin-left: 10px; }
+        .footer a:hover { color: var(--text-main); }
+        @media (min-width: 850px) { .dashboard-container { flex-direction: row; justify-content: center; gap: 100px; align-items: flex-start; } .column { flex: 1; } }
+    </style>
+</head>
+<body class="logged-out">
+
+    <div id="deals-modal" class="modal-overlay" onclick="closeDeals()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <h3 id="modal-venue-name">VENUE DEALS</h3>
+            <p id="modal-deal-text">Loading special intel...</p>
+            <button class="close-modal" onclick="closeDeals()">Back to Feed</button>
+        </div>
+    </div>
+
+    <div id="login-overlay"><button class="login-btn" onclick="loginWithGoogle()"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Continue with Google</button></div>
+
+    <div id="user-nav" class="user-nav-container">
+        <div class="user-info-text">
+            <div id="user-display-name">LOADING...</div>
+            <select id="school-selector" onchange="changeSchool(this.value)">
+                <option value="ohio-state">Ohio State</option>
+                <option value="miami-oh">Miami (OH)</option>
+                <option value="cincinnati">UC</option>
+                <option value="purdue">Purdue</option>
+                <option value="ohio-university">OU</option>
+            </select>
+        </div>
+        <button class="logout-btn" onclick="auth.signOut()">LOGOUT</button>
+    </div>
+
+    <nav class="tab-nav">
+        <a href="index.html" class="tab-link">Home</a>
+        <div class="tab-link active" onclick="switchTab('wait-times')">Wait Times</div>
+        <div class="tab-link" onclick="switchTab('live-feed')">Live Feed 😉</div>
+        <div class="tab-link" onclick="switchTab('safety')">Safety</div>
+    </nav>
+
+    <header>
+        <div class="header-title-wrapper"><h1 id="dynamic-uni-title">COLLEGE NAME IS NEXT.</h1><span class="live-dot"></span></div>
+        <p id="dynamic-uni-tagline">The more people on your campus who use the app, the more accurate the wait times become. Share with your friends in order to reach the highest accuracy level.</p>
+    </header>
+
+    <div id="wait-times" class="tab-content active">
+        <div class="dashboard-container">
+            <section class="column"><div class="column-header"><h2>Local Bars Live</h2></div><div id="bars-list"></div></section>
+            <section class="column"><div class="column-header"><h2>Local Food Joints Live</h2></div><div id="food-list"></div></section>
+        </div>
+    </div>
+
+    <div id="live-feed" class="tab-content">
+        <div class="reddit-container">
+            <div class="post-input-wrapper">
+                <textarea id="intelInput" placeholder="What's the word on campus?" onkeydown="handleMainPostKey(event)"></textarea>
+                <div class="post-actions"><button class="post-btn" onclick="submitIntel()">Post Intel</button></div>
+            </div>
+            <div id="intel-feed"></div>
+            <button id="view-more-posts" class="view-more-posts-btn" style="display: none;" onclick="loadMorePosts()">Load More Intel</button>
+        </div>
+    </div>
+
+    <div id="safety" class="tab-content">
+        <div class="dashboard-container" style="text-align: center; justify-content: flex-start; padding-top: 60px;">
+            <div style="background: var(--intel-card); border: 1px solid var(--border-gray); border-radius: 16px; padding: 24px; max-width: 500px; margin: 0 auto 20px; width: 100%; text-align: left;">
+                <p style="color: var(--accent-color); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; font-size: 12px;">Your Safety Pod</p>
+                <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 15px;">Add up to 3 trusted friends who will receive your emergency beacons.</p>
+                <div id="pod-list" style="margin-bottom: 15px;"></div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="friend-name" placeholder="Name" style="flex: 1; background: #000; border: 1px solid var(--border-gray); color: #fff; padding: 8px; border-radius: 6px; font-size: 12px;">
+                    <input type="tel" id="friend-phone" placeholder="Phone (e.g. +1513...)" style="flex: 1; background: #000; border: 1px solid var(--border-gray); color: #fff; padding: 8px; border-radius: 6px; font-size: 12px;">
+                    <button onclick="addToPod()" style="background: var(--accent-color); color: #000; border: none; padding: 0 15px; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer;">ADD</button>
+                </div>
+            </div>
+
+            <div style="background: var(--intel-card); border: 1px solid var(--border-gray); border-radius: 16px; padding: 24px; max-width: 500px; margin: 0 auto; width: 100%;">
+                <p style="color: var(--accent-color); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; font-size: 12px;">Emergency Beacons</p>
+                <p style="font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 20px;">
+                    Your friends are your first responders. We're launching a tiered beacon system that allows you to alert your 'Safety Pod' without calling 911. One tap sends a direct SMS with your live GPS and battery status.
+                </p>
+                <div class="beacon-grid">
+                    <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-blue);" onclick="triggerBeacon('Check In')">
+                        <span class="tier-icon">📍</span>
+                        <span class="beacon-label" style="color: var(--tier-blue);">Check In</span>
+                    </div>
+                    <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-yellow);" onclick="triggerBeacon('Lost')">
+                        <span class="tier-icon">🔦</span>
+                        <span class="beacon-label" style="color: var(--tier-yellow);">Lost</span>
+                    </div>
+                    <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-orange);" onclick="triggerBeacon('Walk With Me')">
+                        <span class="tier-icon">🚶‍♀️</span>
+                        <span class="beacon-label" style="color: var(--tier-orange);">Walk With Me</span>
+                    </div>
+                    <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-red);" onclick="triggerBeacon('Something\'s Off')">
+                        <span class="tier-icon">⚠️</span>
+                        <span class="beacon-label" style="color: var(--tier-red);">Something's Off</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        © 2026 CollegeNightLive LLC | <a href="terms.html">Terms & Privacy</a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+    <script src="env.js"></script>
+
+    <script>
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const functions = firebase.functions();
+        const urlParams = new URLSearchParams(window.location.search);
+        const uniId = urlParams.get('uni') || 'ohio-state';
+
+        function setSchoolTheme(id) {
+            const themes = { 'ohio-state': '#ba0c2f', 'miami-oh': '#c41230', 'cincinnati': '#e00122', 'purdue': '#ceb888', 'ohio-university': '#2e4d30' };
+            const color = themes[id] || '#ffffff';
+            document.documentElement.style.setProperty('--accent-color', color);
+            const postBtn = document.querySelector('.post-btn');
+            if(postBtn) postBtn.style.color = (id === 'purdue') ? '#000' : '#fff';
+        }
+        setSchoolTheme(uniId);
+
+        let currentBars = [], currentFood = [], lastUpdatedVenueId = null;
+        let postLimit = 15;
+
+        function openDeals(venueName, encodedDeal) {
+            document.getElementById('modal-venue-name').innerText = venueName.toUpperCase();
+            const dealText = encodedDeal ? decodeURIComponent(encodedDeal) : "No special deals reported right now. Check back soon!";
+            document.getElementById('modal-deal-text').innerText = dealText;
+            document.getElementById('deals-modal').style.display = 'flex';
+        }
+
+        function closeDeals() { document.getElementById('deals-modal').style.display = 'none'; }
+
+        function updateHeader(tabId) {
+            const rawName = uniId.replace(/-/g, ' ').toUpperCase();
+            const titleEl = document.getElementById('dynamic-uni-title');
+            const taglineEl = document.getElementById('dynamic-uni-tagline');
+            if (tabId === 'wait-times') { titleEl.innerText = `${rawName} Live`; taglineEl.style.display = 'block'; }
+            else { titleEl.innerText = `${uniId === 'ohio-state' ? 'OSU' : rawName} ${tabId.replace('-', ' ').toUpperCase()}`; taglineEl.style.display = 'none'; }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            const links = document.querySelectorAll('.tab-link');
+            links.forEach(l => { if(l.getAttribute('onclick') === `switchTab('${tabId}')`) l.classList.add('active'); });
+            updateHeader(tabId);
+        }
+
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return "now";
+            const date = (typeof timestamp.toDate === 'function') ? timestamp.toDate() : new Date(timestamp);
+            const seconds = Math.floor((new Date() - date) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + "y";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + "mo";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + "d";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + "h";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + "m";
+            return "now";
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.body.classList.remove('logged-out');
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('user-nav').style.display = 'flex';
+                document.getElementById('user-display-name').innerText = user.displayName.toUpperCase();
+                document.getElementById('school-selector').value = uniId;
+                loadSafetyPod();
+            } else {
+                document.body.classList.add('logged-out');
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('user-nav').style.display = 'none';
+            }
+        });
+
+        function loginWithGoogle() { const provider = new firebase.auth.GoogleAuthProvider(); auth.signInWithPopup(provider); }
+        function changeSchool(newUni) { window.location.href = `university.html?uni=${newUni}`; }
+        function handleMainPostKey(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitIntel(); } }
+        function handleReplyKey(e, postId, parentReplyId) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitReply(postId, parentReplyId); } }
+
+        async function submitIntel() {
+            const content = document.getElementById('intelInput').value.trim();
+            if (!content || !auth.currentUser) return;
+            const expiryDate = new Date(Date.now() + (8 * 60 * 60 * 1000));
+            await db.collection("intel_posts").add({
+                university_id: uniId, content: content, user_id: auth.currentUser.uid,
+                user_name: auth.currentUser.displayName, upvotes: 1, flags: 0,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                deleteAt: firebase.firestore.Timestamp.fromDate(expiryDate)
+            });
+            document.getElementById('intelInput').value = "";
+        }
+
+        function loadMorePosts() { postLimit += 15; initFeedListener(); }
+
+        let feedUnsubscribe = null;
+        function initFeedListener() {
+            if (feedUnsubscribe) feedUnsubscribe();
+            feedUnsubscribe = db.collection("intel_posts")
+                .where("university_id", "==", uniId)
+                .orderBy("timestamp", "desc") 
+                .limit(postLimit + 1)
+                .onSnapshot(snapshot => {
+                    const feed = document.getElementById('intel-feed');
+                    if (!feed) return;
+                    let posts = [];
+                    snapshot.forEach(doc => { 
+                        const data = doc.data();
+                        if ((data.flags || 0) < 5) { posts.push({ id: doc.id, ...data }); }
+                    });
+                    const hasMore = posts.length > postLimit;
+                    const displayPosts = posts.slice(0, postLimit);
+                    document.getElementById('view-more-posts').style.display = hasMore ? 'block' : 'none';
+                    feed.innerHTML = "";
+                    displayPosts.forEach(data => {
+                        const card = document.createElement('div'); card.className = 'intel-card';
+                        card.innerHTML = `
+                            <div class="card-main">
+                                <div class="vote-sidebar">
+                                    <button class="vote-btn" onclick="votePost('${data.id}', 1)">▲</button>
+                                    <span class="vote-count">${data.upvotes || 0}</span>
+                                    <button class="vote-btn" onclick="votePost('${data.id}', -1)">▼</button>
+                                </div>
+                                <div class="intel-content">
+                                    <div class="intel-meta">
+                                        <strong>${data.user_name || 'Anonymous'}</strong>
+                                        <span class="timestamp-tag">• ${formatTimeAgo(data.timestamp)}</span>
+                                    </div>
+                                    <div class="intel-text">${data.content}</div>
+                                    <div class="intel-actions">
+                                        <button class="reply-trigger" onclick="toggleReplyBox('${data.id}', 'main')">Reply</button>
+                                        <button class="flag-btn" onclick="flagPost('${data.id}')">Flag</button>
+                                    </div>
+                                    <div id="reply-box-${data.id}-main" class="reply-input-box">
+                                        <textarea id="reply-input-${data.id}-main" placeholder="Type your reply..." onkeydown="handleReplyKey(event, '${data.id}', 'main')"></textarea>
+                                        <button class="reply-submit-btn" onclick="submitReply('${data.id}', 'main')">Reply</button>
+                                    </div>
+                                    <div id="replies-${data.id}" class="replies-list"></div>
+                                </div>
+                            </div>`;
+                        feed.appendChild(card);
+                        listenForReplies(data.id);
+                    });
+                });
+        }
+        initFeedListener();
+
+        function toggleReplyBox(postId, replyId) { 
+            const box = document.getElementById(`reply-box-${postId}-${replyId}`);
+            if (box) box.classList.toggle('active'); 
+        }
+
+        async function submitReply(postId, parentId) {
+            const input = document.getElementById(`reply-input-${postId}-${parentId}`);
+            const content = input.value.trim();
+            if (!content || !auth.currentUser) return;
+            await db.collection("intel_posts").doc(postId).collection("replies").add({
+                content: content, user_name: auth.currentUser.displayName,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                parent_id: parentId 
+            });
+            input.value = ""; toggleReplyBox(postId, parentId);
+        }
+
+        function toggleChainVisibility(chainId) {
+            const el = document.getElementById(chainId);
+            const btn = document.getElementById('btn-' + chainId);
+            if (el.style.display === 'none') { el.style.display = 'block'; btn.innerText = "Show Less"; }
+            else { el.style.display = 'none'; btn.innerText = "View More Replies"; }
+        }
+
+        function listenForReplies(postId) {
+            db.collection("intel_posts").doc(postId).collection("replies").orderBy("timestamp", "asc").onSnapshot(snapshot => {
+                const container = document.getElementById(`replies-${postId}`);
+                if (!container) return;
+                const allReplies = [];
+                snapshot.forEach(doc => allReplies.push({ id: doc.id, ...doc.data() }));
+                
+                function buildTree(parentID, list) {
+                    const children = list.filter(r => r.parent_id === parentID);
+                    if (children.length === 0) return "";
+                    const firstChild = children[0];
+                    let html = `<div class="reply-item">
+                                    <div class="reply-meta"><strong>${firstChild.user_name || 'Anonymous'}</strong> <span class="timestamp-tag">• ${formatTimeAgo(firstChild.timestamp)}</span></div>
+                                    <div>${firstChild.content}</div>
+                                    <button class="reply-trigger" style="margin-top:6px;" onclick="toggleReplyBox('${postId}', '${firstChild.id}')">Reply</button>
+                                    <div id="reply-box-${postId}-${firstChild.id}" class="reply-input-box">
+                                        <textarea id="reply-input-${postId}-${firstChild.id}" placeholder="Reply to this..." onkeydown="handleReplyKey(event, '${postId}', '${firstChild.id}')"></textarea>
+                                        <button class="reply-submit-btn" onclick="submitReply('${postId}', '${firstChild.id}')">Reply</button>
+                                    </div>
+                                    ${buildTree(firstChild.id, list)}
+                                </div>`;
+                    if (children.length > 1) {
+                        const chainId = `chain-${postId}-${parentID}`;
+                        html += `<button id="btn-${chainId}" class="view-more-replies" onclick="toggleChainVisibility('${chainId}')">View More Replies</button>
+                                 <div id="${chainId}" style="display:none;">${children.slice(1).map(r => `<div class="reply-item"><div class="reply-meta"><strong>${r.user_name || 'Anonymous'}</strong> <span class="timestamp-tag">• ${formatTimeAgo(r.timestamp)}</span></div><div>${r.content}</div><button class="reply-trigger" style="margin-top:6px;" onclick="toggleReplyBox('${postId}', '${r.id}')">Reply</button><div id="reply-box-${postId}-${r.id}" class="reply-input-box"><textarea id="reply-input-${postId}-${r.id}" placeholder="Reply to this..." onkeydown="handleReplyKey(event, '${postId}', '${r.id}')"></textarea><button class="reply-submit-btn" onclick="submitReply('${postId}', '${r.id}')">Reply</button></div>${buildTree(r.id, list)}</div>`).join('')}</div>`;
+                    }
+                    return html;
+                }
+                container.innerHTML = buildTree('main', allReplies);
+            });
+        }
+
+        async function votePost(docId, change) { 
+            if(!auth.currentUser) return;
+            const postRef = db.collection("intel_posts").doc(docId);
+            try {
+                await db.runTransaction(async (transaction) => {
+                    const postDoc = await transaction.get(postRef);
+                    if (!postDoc.exists) return;
+                    const newUpvotes = (postDoc.data().upvotes || 0) + change;
+                    transaction.update(postRef, { upvotes: newUpvotes });
+                });
+            } catch (err) { console.error("Transaction failed: ", err); }
+        }
+
+        async function flagPost(docId) { if(!confirm("Flag this post as inappropriate?")) return; await db.collection("intel_posts").doc(docId).update({ flags: firebase.firestore.FieldValue.increment(1) }); }
+        
+        function renderCurrentLists() { renderList("bars-list", currentBars); renderList("food-list", currentFood); }
+        
+        function renderList(e, v) {
+            const list = document.getElementById(e); if (!list) return;
+            v.sort((a, b) => a.name.localeCompare(b.name)); list.innerHTML = "";
+            const options = e === "food-list" ? [0, 5, 10, 15, 20, 25] : [0, 5, 15, 25, 40, 60];
+            const collectionName = e.includes('bars') ? 'bars' : 'food-joints';
+            const isFood = e === "food-list";
+            const affiliateLabel = isFood ? "Hungry?" : "Need a Ride?";
+            const affiliateUrl = isFood ? "https://www.grubhub.com" : "https://www.lyft.com";
+
+            v.forEach((data) => {
+                const waitString = (data.predicted_wait !== undefined) ? data.predicted_wait : (data.wait_time || 0);
+                const minutes = parseInt(String(waitString).split('-')[0]) || 0;
+                const closed = (data.ai_reason || "").toLowerCase().includes("closed");
+                const dealValue = data.current_deal ? encodeURIComponent(data.current_deal) : "";
+                let fillWidth = 0; let statusColor = "var(--wait-green)";
+                if (isFood) {
+                    if (minutes <= 5) fillWidth = 25;
+                    else if (minutes <= 20) { fillWidth = 25 + ((minutes - 5) / 15) * 50; statusColor = "var(--wait-yellow)"; }
+                    else { fillWidth = 100; statusColor = "var(--wait-red)"; }
+                } else {
+                    if (minutes <= 15) fillWidth = 25;
+                    else if (minutes <= 45) { fillWidth = 25 + ((minutes - 15) / 30) * 50; statusColor = "var(--wait-yellow)"; }
+                    else { fillWidth = 100; statusColor = "var(--wait-red)"; }
+                }
+                if (closed) { fillWidth = 100; statusColor = "var(--status-closed)"; }
+                const row = document.createElement("div"); row.className = `row-item ${data.id === lastUpdatedVenueId ? 'was-updated' : ''}`;
+                row.innerHTML = `<div class="row-top"><div class="venue-info"><div class="venue-name">${data.name}</div></div><div class="wait-time-text">${getWaitRange(waitString, data.ai_reason)}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section"><a href="${affiliateUrl}" target="_blank" class="affiliate-link-btn">${affiliateLabel}</a><button class="deals-btn" onclick="openDeals('${data.name.replace(/'/g, "\\'")}', '${dealValue}')">Deals</button><div class="intel-options">${options.map(t => `<button onclick="reportIntel('${collectionName}', '${data.id}', ${t})">${t === 0 ? '0m' : (t === 25 && e === "food-list") ? '25m+' : (t === 60 && e === "bars-list") ? '60m+' : t + 'm'}</button>`).join('')}</div></div>`;
+                list.appendChild(row);
+            });
+        }
+        function getWaitRange(m, r) { if (r && r.toLowerCase().includes("closed")) return "CLOSED"; return m || "N/A"; }
+        db.collection("universities").doc(uniId).collection("bars").onSnapshot(snap => { currentBars = []; snap.forEach(doc => currentBars.push({ id: doc.id, ...doc.data() })); renderCurrentLists(); });
+        db.collection("universities").doc(uniId).collection("food-joints").onSnapshot(snap => { currentFood = []; snap.forEach(doc => currentFood.push({ id: doc.id, ...doc.data() })); renderCurrentLists(); });
+        window.reportIntel = async function(col, docId, newTime) { if(!auth.currentUser) return; lastUpdatedVenueId = docId; await db.collection("universities").doc(uniId).collection(col).doc(docId).update({ wait_time: newTime, last_updated: firebase.firestore.FieldValue.serverTimestamp() }); };
+
+        function loadSafetyPod() {
+            if (!auth.currentUser) return;
+            db.collection("users").doc(auth.currentUser.uid).collection("safety_pod")
+                .onSnapshot(snap => {
+                    const list = document.getElementById('pod-list');
+                    if (!list) return;
+                    list.innerHTML = "";
+                    snap.forEach(doc => {
+                        const contact = doc.data();
+                        list.innerHTML += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#1c1c1e; padding:8px 12px; border-radius:8px; margin-bottom:8px; font-size:12px;">
+                                <span><strong>${contact.name}</strong> (${contact.phone})</span>
+                                <button onclick="removeFromPod('${doc.id}')" style="background:none; border:none; color:var(--wait-red); cursor:pointer; font-weight:800;">✕</button>
+                            </div>`;
+                    });
+                });
+        }
+
+        async function addToPod() {
+            const name = document.getElementById('friend-name').value;
+            const phone = document.getElementById('friend-phone').value;
+            if (!name || !phone) return alert("Enter name and phone number");
+            await db.collection("users").doc(auth.currentUser.uid).collection("safety_pod").add({ name: name, phone: phone.replace(/\s/g, '') });
+            document.getElementById('friend-name').value = ""; document.getElementById('friend-phone').value = "";
+        }
+
+        async function removeFromPod(id) { await db.collection("users").doc(auth.currentUser.uid).collection("safety_pod").doc(id).delete(); }
+
+        async function triggerBeacon(tierName) {
+            if (!auth.currentUser) return alert("You must be logged in to send a safety beacon.");
+            if (!navigator.geolocation) return alert("Geolocation is not supported by your browser.");
+            if(!confirm(`Send ${tierName} alert to your Safety Pod?`)) return;
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const { latitude, longitude } = position.coords;
+                let batteryLevel = "N/A";
+                try { const battery = await navigator.getBattery(); batteryLevel = Math.round(battery.level * 100); } catch (e) {}
+                const sendBeacon = functions.httpsCallable('sendSafetyBeacon');
+                try {
+                    const result = await sendBeacon({ tier: tierName, lat: latitude, lng: longitude, battery: batteryLevel });
+                    if(result.data.success) alert("Beacon Sent! Your Safety Pod has been notified.");
+                } catch (error) { alert("Error sending beacon. Check your Safety Pod configuration."); }
+            }, (err) => { alert("Please enable location services to use the Safety Grid."); });
+        }
+
+        updateHeader('wait-times');
+    </script>
+</body> 
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Post Thread | The Refinery</title>
+    <style>
+        :root { --bg-black: #000; --border-gray: #1c1c1e; --text-main: #fff; --text-dim: #8e8e93; --accent: #fff; }
+        body { background: var(--bg-black); color: var(--text-main); font-family: -apple-system, sans-serif; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+        
+        .thread-nav { padding: 15px 20px; border-bottom: 1px solid var(--border-gray); position: sticky; top: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+        .back-btn { background: none; border: none; color: var(--accent); font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 12px; }
+
+        .main-post { padding: 30px 20px; border-bottom: 8px solid var(--border-gray); }
+        .post-text { font-size: 19px; line-height: 1.4; margin-bottom: 10px; }
+
+        /* RECURSIVE NESTING CSS */
+        .comments-section { padding: 20px 20px 150px; }
+        .comment-wrapper { margin-top: 15px; padding-left: 15px; border-left: 1px solid var(--border-gray); position: relative; }
+        .comment-meta { font-size: 10px; color: var(--text-dim); font-weight: 800; margin-bottom: 4px; }
+        .comment-text { font-size: 14px; margin-bottom: 8px; }
+        .reply-btn { background: none; border: none; color: var(--text-dim); font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; }
+
+        /* INLINE INPUT */
+        .inline-reply { display: none; margin: 10px 0; }
+        .inline-reply.active { display: flex; flex-direction: column; gap: 8px; }
+        textarea { background: #111; border: 1px solid var(--border-gray); color: #fff; border-radius: 8px; padding: 10px; font-size: 13px; resize: none; font-family: inherit; }
+        
+        .submit-btn { align-self: flex-end; background: var(--accent); color: #000; border: none; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 11px; cursor: pointer; }
+        .bottom-bar { position: fixed; bottom: 0; width: 100%; background: #111; padding: 15px 20px 30px; border-top: 1px solid var(--border-gray); box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+    <nav class="thread-nav">
+        <button class="back-btn" onclick="history.back()">← BACK</button>
+        <div style="font-size: 10px; font-weight: 900; letter-spacing: 2px;">THREAD</div>
+        <div style="width: 40px;"></div>
+    </nav>
+
+    <div id="main-post-render" class="main-post"></div>
+
+    <div class="comments-section" id="comments-list">
+        </div>
+
+    <div class="bottom-bar">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <textarea id="rootInput" style="flex:1; height: 36px;" placeholder="Add a comment..."></textarea>
+            <button class="submit-btn" onclick="submitComment('main')">Post</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="env.js"></script>
+
+    <script>
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const params = new URLSearchParams(window.location.search);
+        const postId = params.get('id');
+
+        async function loadPost() {
+            const doc = await db.collection("intel_posts").doc(postId).get();
+            if (doc.exists) {
+                document.getElementById('main-post-render').innerHTML = `
+                    <div class="comment-meta">ANONYMOUS • INTEL</div>
+                    <div class="post-text">${doc.data().content}</div>
+                    <div style="font-size:11px; color:#30d158; font-weight:800;">▲ ${doc.data().upvotes || 0} UPVOTES</div>
+                `;
+            }
+        }
+
+        function initComments() {
+            db.collection("intel_posts").doc(postId).collection("comments").orderBy("timestamp", "asc").onSnapshot(snap => {
+                const all = [];
+                snap.forEach(doc => all.push({ id: doc.id, ...doc.data() }));
+                renderTree(all);
+            });
+        }
+
+        function renderTree(list) {
+            const container = document.getElementById('comments-list');
+            container.innerHTML = "";
+
+            function build(parentId) {
+                const children = list.filter(c => (c.parent_id || 'main') === parentId);
+                let html = "";
+                children.forEach(c => {
+                    html += `
+                        <div class="comment-wrapper">
+                            <div class="comment-meta">ANONYMOUS</div>
+                            <div class="comment-text">${c.content}</div>
+                            <button class="reply-btn" onclick="toggleReply('${c.id}')">Reply</button>
+                            <div id="box-${c.id}" class="inline-reply">
+                                <textarea id="input-${c.id}" placeholder="Reply to this..."></textarea>
+                                <button class="submit-btn" onclick="submitComment('${c.id}')">Post</button>
+                            </div>
+                            <div class="nested-container">${build(c.id)}</div>
+                        </div>`;
+                });
+                return html;
+            }
+            container.innerHTML = build('main') || `<p style="color:var(--text-dim); font-size:13px; text-align:center; margin-top:40px;">No conversation yet.</p>`;
+        }
+
+        async function submitComment(pId) {
+            const el = document.getElementById(pId === 'main' ? 'rootInput' : `input-${pId}`);
+            const val = el.value.trim();
+            if (!val || !auth.currentUser) return;
+
+            await db.collection("intel_posts").doc(postId).collection("comments").add({
+                content: val, parent_id: pId, alias: "ANONYMOUS", timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            await db.collection("intel_posts").doc(postId).update({ comment_count: firebase.firestore.FieldValue.increment(1) });
+            el.value = "";
+            if (pId !== 'main') toggleReply(pId);
+        }
+
+        function toggleReply(id) {
+            document.getElementById(`box-${id}`).classList.toggle('active');
+        }
+
+        auth.onAuthStateChanged(u => { if(u){ loadPost(); initComments(); } });
+    </script>
+</body>
+</html>

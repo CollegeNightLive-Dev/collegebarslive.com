@@ -76,3 +76,9 @@ seed_bars.py
 # Security Keys
 env.js
 serviceAccountKey.json
+# OpenSSL Keys and Requests
+collegenightlive.key
+collegenightlive.csr
+collegebarslive.key
+collegebarslive.csr
+serviceAccountKey.json

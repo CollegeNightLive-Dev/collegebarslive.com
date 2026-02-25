@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="The Feed">
+
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name='impact-site-verification' value='e2283d38-22b0-4195-8e5c-876111b88e82'>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The Live Feed | Predict Your Night</title>
@@ -8,10 +14,14 @@
         :root {
             --bg-black: #000000;
             --text-main: #ffffff;
-            --text-dim: #636366;
+            --text-dim: #86868b; 
             --footer-text: #424245;
             --accent-gray: #1c1c1e;
-            --iu-crimson: #990000; /* New branding color for search match */
+            --glass-bg: rgba(28, 28, 30, 0.7);
+            --vouch-border: #2c2c2e;
+            --accent-color: #ffffff; /* Dynamic - Set by Memory */
+            --border-gray: #1c1c1e;
+            --rival-yellow: #FFCB05;
         }
 
         html, body {
@@ -19,188 +29,328 @@
             margin: 0;
             background-color: var(--bg-black);
             color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden; 
         }
 
         body {
-            display: flex;
-            flex-direction: column;
+            display: block; /* Natural top-to-bottom scroll flow */
             box-sizing: border-box;
-            padding: 0 24px;
+            padding: 0;
             text-align: center;
         }
 
-        .main-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        /* FIXED NAV: Integrated user nav into tab-nav for horizontal alignment */
+        .tab-nav {
+            display: flex; 
+            align-items: center; 
+            justify-content: center; /* Center links by default */
+            padding: 0 24px;
+            background: rgba(0,0,0,0.8); 
+            backdrop-filter: blur(20px);
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            border-bottom: 1px solid var(--border-gray);
             width: 100%;
-            animation: fadeIn 0.8s ease-out;
+            height: 60px;
+            box-sizing: border-box;
+        }
+
+        .tab-links-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .tab-link {
+            font-size: 10px; font-weight: 700; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+            padding: 22px 0; transition: all 0.3s ease;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-link.active { color: var(--text-main); border-bottom: 2px solid var(--accent-color); }
+
+        /* User Info Alignment within the Nav Bar */
+        .user-nav-container {
+            display: none; 
+            align-items: center;
+            gap: 15px;
+            position: absolute;
+            right: 24px;
+        }
+
+        .user-info-text { 
+            text-align: right; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-end; 
+            justify-content: center;
+        }
+
+        #user-display-name {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: 0.5px; 
+            margin-bottom: 2px;
+            line-height: 1;
+        }
+
+        #school-selector {
+            background: transparent; border: none; color: var(--accent-color);
+            font-size: 9px; font-weight: 700; cursor: pointer;
+            text-transform: uppercase; outline: none; padding: 0;
+            line-height: 1;
+        }
+
+        .logout-btn {
+            background: transparent; border: 1px solid var(--border-gray);
+            color: var(--text-dim); font-size: 8px; font-weight: 700;
+            padding: 5px 12px; border-radius: 4px; cursor: pointer; transition: 0.2s;
+            height: fit-content;
+        }
+
+        .logout-btn:hover { border-color: var(--text-dim); color: var(--text-main); }
+
+        .main-wrapper {
+            width: 100%;
+            padding: 60px 24px; 
+            animation: fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            overflow-y: auto;
+            box-sizing: border-box;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .main-content {
-            width: 100%;
-            max-width: 600px;
-        }
+        .main-content { width: 100%; max-width: 650px; margin: 0 auto 40px auto; }
 
         h1 {
-            font-size: clamp(44px, 10vw, 78px);
-            font-weight: 900;
-            letter-spacing: -0.02em;
-            margin: 0 0 16px 0;
-            line-height: 0.95;
-            text-transform: uppercase;
+            font-size: clamp(38px, 10vw, 82px); 
+            font-weight: 800; letter-spacing: -0.05em; margin: 0 0 10px 0;
+            line-height: 1.1; text-transform: uppercase;
         }
 
-        .hero-desc {
-            font-size: 17px;
-            color: #86868b;
-            line-height: 1.4;
-            margin-bottom: 40px;
-            max-width: 450px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .search-container {
-            width: 100%;
-            max-width: 480px;
-            margin: 0 auto 50px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 18px 24px;
-            background: var(--accent-gray);
-            border: 1px solid #2c2c2e;
-            border-radius: 14px;
-            color: white;
-            font-size: 17px;
-            outline: none;
-            box-sizing: border-box;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        input[type="text"]:focus {
-            border-color: #444;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
-        }
-
-        /* Coming Soon Section */
-        .coming-soon-header {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.25em;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            margin-bottom: 18px;
+        .tagline {
+            font-size: clamp(14px, 3.5vw, 18px); font-weight: 500;
+            color: #f5f5f7; margin-bottom: 20px; letter-spacing: -0.015em;
         }
 
         .features-grid {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
+            display: flex; justify-content: center; gap: 12px;
+            flex-wrap: wrap; margin-bottom: 32px;
         }
 
         .feature-item {
-            font-size: 10px;
-            color: var(--footer-text);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-size: 9px; color: var(--text-dim); display: flex;
+            align-items: center; gap: 5px; text-transform: uppercase;
+            letter-spacing: 0.1em; font-weight: 600;
         }
 
-        .dot {
-            height: 3px;
-            width: 3px;
-            background-color: var(--footer-text);
-            border-radius: 50%;
+        .dot { height: 3px; width: 3px; background-color: #3a3a3c; border-radius: 50%; }
+
+        .search-container { width: 100%; max-width: 460px; margin: 0 auto 24px; }
+
+        input[type="text"] {
+            width: 100%; padding: 18px 24px; background: var(--glass-bg);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
+            color: white; font-size: 16px; outline: none; text-align: center;
+            box-sizing: border-box;
         }
 
-        footer {
-            padding-bottom: 40px;
+        .partner-info-box {
+            background: var(--accent-gray);
+            border-radius: 24px;
+            padding: 40px;
+            margin-top: 10px;
+            text-align: left;
+            border: 1px solid var(--vouch-border);
+            line-height: 1.6;
         }
 
-        .copyright {
-            font-size: 10px;
-            color: var(--footer-text);
-            letter-spacing: 0.02em;
+        .partner-info-box h2 { font-size: 16px; margin-bottom: 20px; color: var(--accent-color); text-transform: uppercase; letter-spacing: 1px; }
+        .partner-info-box p { font-size: 14px; color: #d1d1d6; margin-bottom: 18px; }
+        .stat-highlight { font-weight: 800; color: var(--text-main); }
+
+        .affiliate-container { display: flex; justify-content: center; gap: 16px; margin-top: 40px; margin-bottom: 12px; }
+
+        .affiliate-btn {
+            background: transparent; color: var(--text-main); border: 1px solid var(--vouch-border);
+            padding: 8px 18px; border-radius: 8px; font-size: 10px; font-weight: 600;
+            text-decoration: none; text-transform: uppercase; cursor: pointer;
         }
 
-        @media (max-width: 600px) {
-            h1 { font-size: 52px; }
-            .search-container { margin-bottom: 40px; }
+        .disclosure-text {
+            font-size: 9px; color: var(--footer-text); margin-bottom: 40px;
+            max-width: 350px; margin-left: auto; margin-right: auto;
+        }
+
+        footer { padding: 40px 0; width: 100%; margin-top: 20px; }
+        .copyright { font-size: 10px; color: var(--footer-text); }
+        .footer-links { margin-top: 10px; }
+        .footer-links a { color: var(--footer-text); text-decoration: none; transition: color 0.2s ease; font-size: 10px; }
+        .footer-links a:hover { color: var(--text-main); }
+
+        @media (max-width: 850px) {
+            .tab-nav { padding: 0 10px; }
+            .user-nav-container { position: static; gap: 8px; margin-left: auto; }
+            .tab-links-container { gap: 10px; flex: 0; }
+            .tab-link { font-size: 9px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="main-wrapper">
-        <div class="main-content">
-            <h1>THE LIVE<br>FEED</h1>
-            <p class="hero-desc">Self-learning AI model predicting live campus bar and food joint wait times.</p>
+    <nav class="tab-nav">
+        <div class="tab-links-container">
+            <div onclick="switchView('home')" id="nav-home" class="tab-link active">Home</div>
+            <a id="link-wait-times" href="university.html?uni=ohio-state&tab=wait-times" class="tab-link">Wait Times</a>
+            <a id="link-live-feed" href="university.html?uni=ohio-state&tab=live-feed" class="tab-link">Live Feed</a>
+            <a id="link-safety" href="university.html?uni=ohio-state&tab=safety" class="tab-link">Safety</a>
+            <div onclick="switchView('partner')" id="nav-partner" class="tab-link">Partner With Us</div>
+        </div>
 
-            <div class="search-container">
-                <input type="text" id="schoolSearch" placeholder="Search for a school (e.g. Purdue)..." onkeypress="handleSearch(event)">
+        <div id="user-nav" class="user-nav-container">
+            <div class="user-info-text">
+                <div id="user-display-name">LOADING...</div>
+                <select id="school-selector" onchange="changeSchool(this.value)">
+                    <option value="ohio-state">Ohio State</option>
+                    <option value="miami-oh">Miami (OH)</option>
+                    <option value="cincinnati">UC</option>
+                    <option value="purdue">Purdue</option>
+                    <option value="ohio-university">OU</option>
+                </select>
             </div>
+            <button class="logout-btn" onclick="handleLogout()">LOGOUT</button>
+        </div>
+    </nav>
 
-            <div class="coming-soon-section">
-                <div class="coming-soon-header">LIVE NOTIFICATIONS - COMING SOON TO APP STORE</div>
-                <div class="features-grid">
-                    <div class="feature-item"><span class="dot"></span> "SECURITY (UC)"</div>
-                    <div class="feature-item"><span class="dot"></span> MUSIC VIBE</div>
-                    <div class="feature-item"><span class="dot"></span> SPECIAL GUESTS</div>
-                </div>
+    <div class="main-wrapper">
+        <div id="view-home" class="main-content">
+            <h1>THE LIVE FEED</h1>
+            <p class="tagline">The Social Intelligence Network for College Nightlife.</p>
+            <div class="features-grid">
+                <div class="feature-item"><span class="dot"></span> CROWDSOURCED INTEL</div>
+                <div class="feature-item"><span class="dot"></span> LIVE WAIT TIMES</div>
+                <div class="feature-item"><span class="dot"></span> SECURITY (UC) ALERTS </div>
+            </div>
+            <div class="search-container">
+                <input type="text" id="schoolSearch" placeholder="Find your campus..." onkeypress="handleSearch(event)">
             </div>
         </div>
+
+        <div id="view-partner" class="main-content" style="display:none;">
+            <h1>Scaling Nightlife</h1>
+            <p class="tagline">A Data-Driven Infrastructure for the Modern Campus Experience.</p>
+            <div class="partner-info-box">
+                <h2>JOIN THE NETWORK</h2>
+                <p>CollegeNightLive is architected for rapid deployment across high-density university markets. We provide real-time intelligence that prioritizes <span class="stat-highlight">Student Safety</span> and <span class="stat-highlight">Verified Data</span> over monetization loops.</p>
+                <p>We are looking to partner with campus leaders, local business owners, and logistics brands like <span class="stat-highlight">Lyft</span> and <span class="stat-highlight">Grubhub</span> who want to reach the Gen Z demographic at the exact moment of decision-making.</p>
+                <p>If you are a student leader looking to bring the Feed to your campus, or a brand partner looking for high-intent integration, please contact us at <span class="stat-highlight">partners@collegenightlive.com</span>.</p>
+            </div>
+        </div>
+
+        <div class="affiliate-container">
+            <a href="https://www.lyft.com" target="_blank" class="affiliate-btn">Get Home Safe</a>
+            <a href="https://www.grubhub.com" target="_blank" class="affiliate-btn">Cravings</a>
+        </div>
+        <p class="disclosure-text">Clicking helps support us. We may earn a small commission at no cost to you.</p>
+        
+        <footer>
+            <div class="copyright">
+                © 2026 Srikar Konda and Jackson Stevenson. All rights reserved.
+            </div>
+            <div class="footer-links">
+                <a href="terms.html">Terms & Privacy</a>
+            </div>
+        </footer>
     </div>
 
-    <footer>
-        <div class="copyright">
-            © 2026 Srikar Konda & Jackson Stevenson. All rights reserved.
-        </div>
-    </footer>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="env.js"></script>
 
     <script>
-        /**
-         * Resolves search queries to the universal template with specific uniId params.
-         * This architecture allows for 100% scalability without creating new .html files.
-         */
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        function setSchoolTheme(id) {
+            const themes = {
+                'ohio-state': '#ba0c2f', 'miami-oh': '#c41230',
+                'cincinnati': '#e00122', 'purdue': '#ceb888',
+                'ohio-university': '#2e4d30'
+            };
+            const color = themes[id] || '#ffffff';
+            document.documentElement.style.setProperty('--accent-color', color);
+            
+            if (id) {
+                const waitLink = document.getElementById('link-wait-times');
+                const feedLink = document.getElementById('link-live-feed');
+                const safetyLink = document.getElementById('link-safety');
+                
+                if(waitLink) waitLink.href = `university.html?uni=${id}&tab=wait-times`;
+                if(feedLink) feedLink.href = `university.html?uni=${id}&tab=live-feed`;
+                if(safetyLink) safetyLink.href = `university.html?uni=${id}&tab=safety`;
+            }
+        }
+
+        const rememberedUni = localStorage.getItem('selectedUni');
+        setSchoolTheme(rememberedUni);
+
+        auth.onAuthStateChanged((user) => {
+            const userNav = document.getElementById('user-nav');
+            if (user) {
+                userNav.style.display = 'flex'; 
+                document.getElementById('user-display-name').innerText = user.displayName ? user.displayName.toUpperCase() : "USER";
+                const currentUni = rememberedUni || 'ohio-state';
+                document.getElementById('school-selector').value = currentUni;
+            } else {
+                userNav.style.display = 'none';
+            }
+        });
+
+        function switchView(view) {
+            document.getElementById('view-home').style.display = view === 'home' ? 'block' : 'none';
+            document.getElementById('view-partner').style.display = view === 'partner' ? 'block' : 'none';
+            document.getElementById('nav-home').classList.toggle('active', view === 'home');
+            document.getElementById('nav-partner').classList.toggle('active', view === 'partner');
+            window.scrollTo(0, 0);
+        }
+
+        function handleLogout() { auth.signOut().then(() => { window.location.reload(); }); }
+        
+        function changeSchool(newUni) { 
+            localStorage.setItem('selectedUni', newUni);
+            window.location.href = `university.html?uni=${newUni}`; 
+        }
+
         function handleSearch(event) {
             if (event.key === "Enter") {
                 const query = document.getElementById('schoolSearch').value.toLowerCase().trim();
-                
-                // Redirect logic using URL parameters for the dynamic template
-                if (query.includes('ohio state') || query === 'osu') {
-                    window.location.href = 'university.html?uni=ohio-state';
-                } 
-                else if (query.includes('purdue')) {
-                    window.location.href = 'university.html?uni=purdue';
+                const routes = {
+                    'osu': 'ohio-state', 'ohio state': 'ohio-state',
+                    'purdue': 'purdue', 'miami': 'miami-oh',
+                    'uc': 'cincinnati', 'cincinnati': 'cincinnati',
+                    'ou': 'ohio-university', 'ohio university': 'ohio-university'
+                };
+                let matchFound = false;
+                for (let key in routes) {
+                    if (query.includes(key)) {
+                        localStorage.setItem('selectedUni', routes[key]);
+                        window.location.href = `university.html?uni=${routes[key]}`;
+                        matchFound = true;
+                        break;
+                    }
                 }
-                else if (query.includes('miami')) {
-                    window.location.href = 'university.html?uni=miami-oh';
-                }
-                else if (query.includes('cincinnati') || query === 'uc') {
-                    window.location.href = 'university.html?uni=cincinnati';
-                }
-                else if (query.includes('ohio university') || query === 'ou' || query === 'ohio') {
-                    window.location.href = 'university.html?uni=ohio-university';
-                }
-                // Default fallback
-                else {
-                    alert("School not found. We are currently live at OSU, Miami, Cincinnati, Purdue, and OU!");
-                }
+                if (!matchFound) { alert("Campus not found. We're currently live at OSU, Miami, UC, Purdue, and OU!"); }
             }
         }
     </script>

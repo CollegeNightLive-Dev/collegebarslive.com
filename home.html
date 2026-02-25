@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Bar Wait Times | Live Intel</title>
+    <style>
+        /* Apple/Minimalist Dark Mode Palette */
+        :root {
+            --bg-black: #000000;
+            --input-bg: #0a0a0a;
+            --input-border: #1d1d1f;
+            --text-primary: #ffffff;
+            --text-secondary: #86868b;
+            --accent-blue: #0071e3;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-black);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .hero-container {
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.04em;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 14px;
+            padding: 18px 24px;
+            font-size: 1.1rem;
+            color: white;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.2);
+        }
+
+        input[type="text"]::placeholder {
+            color: #424245;
+        }
+
+        /* Minimalist Login Button */
+        .login-btn {
+            margin-top: 25px;
+            background-color: white;
+            color: black;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .login-btn:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+
+        .login-btn img {
+            width: 18px;
+            height: 18px;
+        }
+
+        .hint {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #424245;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero-container">
+        <h1>Live College Bar and Food lines.</h1>
+        <p class="subtitle">Live campus safety and line intel.</p>
+        
+        <div class="search-wrapper">
+            <input type="text" id="campusSearch" placeholder="Search your campus..." autocomplete="off">
+            
+            <button class="login-btn" onclick="loginWithGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                Continue with Google
+            </button>
+        </div>
+
+        <p class="hint">Try "Ohio State" or "Michigan"</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+
+        // Your Web App's Chemical Formula
+        const firebaseConfig = {
+            apiKey: "AIzaSyDmGXzQ8jLvclzZySdjgz_Xcx0AhA2tJv0",
+            authDomain: "college-bars-live.firebaseapp.com",
+            projectId: "college-bars-live",
+            storageBucket: "college-bars-live.firebasestorage.app",
+            messagingSenderId: "383445682025",
+            appId: "1:383445682025:web:e52c5c7c3978909755dff8",
+            measurementId: "G-WNYYV54JZZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Making the function global for the button
+        window.loginWithGoogle = () => {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    console.log("Logged in:", result.user.displayName);
+                    // Redirect after login success
+                    window.location.href = 'osu.html';
+                }).catch((error) => {
+                    alert("Auth Error: " + error.message);
+                });
+        };
+    </script>
+
+    <script>
+        const searchInput = document.getElementById('campusSearch');
+
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const query = searchInput.value.toLowerCase();
+                if (query.includes('ohio state') || query.includes('osu')) {
+                    window.location.href = 'osu.html'; 
+                } else {
+                    alert('Campus data coming soon for ' + searchInput.value);
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

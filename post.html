@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Post Thread | The Refinery</title>
     <style>
+<<<<<<< HEAD
         :root { --bg-black: #000; --border-gray: #1c1c1e; --text-main: #fff; --text-dim: #8e8e93; --accent: #fff; }
         body { background: var(--bg-black); color: var(--text-main); font-family: -apple-system, sans-serif; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
         
@@ -28,11 +29,74 @@
         
         .submit-btn { align-self: flex-end; background: var(--accent); color: #000; border: none; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 11px; cursor: pointer; }
         .bottom-bar { position: fixed; bottom: 0; width: 100%; background: #111; padding: 15px 20px 30px; border-top: 1px solid var(--border-gray); box-sizing: border-box; }
+=======
+        :root {
+            --bg-black: #000000;
+            --border-gray: #1c1c1e;
+            --text-main: #ffffff;
+            --text-dim: #8e8e93;
+            --accent-color: #ffffff;
+            --intel-card: rgba(28, 28, 30, 0.6);
+            --wait-green: #30d158;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        /* TOP NAVIGATION */
+        .thread-nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 20px; border-bottom: 1px solid var(--border-gray);
+            position: sticky; top: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); z-index: 100;
+        }
+
+        .back-btn {
+            background: none; border: none; color: var(--accent-color);
+            font-size: 14px; font-weight: 700; cursor: pointer; text-transform: uppercase;
+        }
+
+        /* MAIN POST AREA */
+        .main-post-container { padding: 20px; border-bottom: 8px solid var(--border-gray); }
+        .post-meta { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; font-weight: 600; }
+        .post-text { font-size: 18px; line-height: 1.5; font-weight: 400; margin-bottom: 15px; }
+        
+        /* COMMENTS LIST */
+        .comments-section { flex: 1; padding: 20px 20px 120px; }
+        .comments-header { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; font-weight: 700; }
+        .comment-item { margin-bottom: 24px; padding-left: 12px; border-left: 2px solid var(--accent-color); }
+        .comment-meta { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; font-weight: 700; }
+        .comment-text { font-size: 14px; line-height: 1.4; color: rgba(255,255,255,0.9); }
+
+        /* PERSISTENT INPUT BOX */
+        .comment-input-area {
+            position: fixed; bottom: 0; width: 100%; box-sizing: border-box;
+            background: #1c1c1e; padding: 20px; border-top: 1px solid var(--border-gray);
+            display: flex; gap: 12px; align-items: center;
+        }
+
+        textarea {
+            flex: 1; background: #000; border: 1px solid var(--border-gray);
+            color: #fff; border-radius: 12px; padding: 12px; font-size: 14px;
+            resize: none; outline: none; height: 40px; font-family: inherit;
+        }
+
+        .send-btn {
+            background: var(--accent-color); color: #000; border: none;
+            padding: 10px 20px; border-radius: 20px; font-weight: 800;
+            font-size: 12px; text-transform: uppercase; cursor: pointer;
+        }
+>>>>>>> 7957529512e5d0bf4b6cbc0e021469c83042b0b6
     </style>
 </head>
 <body>
 
     <nav class="thread-nav">
+<<<<<<< HEAD
         <button class="back-btn" onclick="history.back()">← BACK</button>
         <div style="font-size: 10px; font-weight: 900; letter-spacing: 2px;">THREAD</div>
         <div style="width: 40px;"></div>
@@ -48,6 +112,26 @@
             <textarea id="rootInput" style="flex:1; height: 36px;" placeholder="Add a comment..."></textarea>
             <button class="submit-btn" onclick="submitComment('main')">Post</button>
         </div>
+=======
+        <button class="back-btn" onclick="goBack()">← Back</button>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px;">THREAD</div>
+        <div style="width: 40px;"></div>
+    </nav>
+
+    <div class="main-post-container" id="main-post-render">
+        <p style="color: var(--text-dim);">Loading intelligence...</p>
+    </div>
+
+    <div class="comments-section">
+        <div class="comments-header">CONVERSATION</div>
+        <div id="comments-list">
+            </div>
+    </div>
+
+    <div class="comment-input-area">
+        <textarea id="replyInput" placeholder="Add an anonymous comment..."></textarea>
+        <button class="send-btn" onclick="submitComment()">Post</button>
+>>>>>>> 7957529512e5d0bf4b6cbc0e021469c83042b0b6
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -59,6 +143,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
+<<<<<<< HEAD
         const params = new URLSearchParams(window.location.search);
         const postId = params.get('id');
 
@@ -69,10 +154,32 @@
                     <div class="comment-meta">ANONYMOUS • INTEL</div>
                     <div class="post-text">${doc.data().content}</div>
                     <div style="font-size:11px; color:#30d158; font-weight:800;">▲ ${doc.data().upvotes || 0} UPVOTES</div>
+=======
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('id');
+        const uniId = urlParams.get('uni') || 'ohio-state';
+
+        function goBack() {
+            window.location.href = `university.html?uni=${uniId}`;
+        }
+
+        // LOAD MAIN POST
+        async function loadPost() {
+            if (!postId) return;
+            const doc = await db.collection("intel_posts").doc(postId).get();
+            if (doc.exists) {
+                const data = doc.data();
+                document.getElementById('main-post-render').innerHTML = `
+                    <div class="post-meta">ANONYMOUS • ${data.university_id.toUpperCase()}</div>
+                    <div class="post-text">${data.content}</div>
+                    <div style="font-size: 12px; color: var(--wait-green); font-weight: 800;">▲ ${data.upvotes || 0} UPVOTES</div>
+>>>>>>> 7957529512e5d0bf4b6cbc0e021469c83042b0b6
                 `;
             }
         }
 
+<<<<<<< HEAD
         function initComments() {
             db.collection("intel_posts").doc(postId).collection("comments").orderBy("timestamp", "asc").onSnapshot(snap => {
                 const all = [];
@@ -128,3 +235,56 @@
     </script>
 </body>
 </html>
+=======
+        // LOAD COMMENTS
+        function loadComments() {
+            db.collection("intel_posts").doc(postId).collection("comments")
+              .orderBy("timestamp", "asc")
+              .onSnapshot(snap => {
+                  const list = document.getElementById('comments-list');
+                  list.innerHTML = "";
+                  if(snap.empty) {
+                      list.innerHTML = `<p style="color: var(--text-dim); font-size: 13px;">No one has spoken yet. Be the first.</p>`;
+                  }
+                  snap.forEach(c => {
+                      const d = c.data();
+                      list.innerHTML += `
+                        <div class="comment-item">
+                            <div class="comment-meta">ANONYMOUS</div>
+                            <div class="comment-text">${d.content}</div>
+                        </div>`;
+                  });
+              });
+        }
+
+        // SUBMIT COMMENT
+        async function submitComment() {
+            const input = document.getElementById('replyInput');
+            const content = input.value.trim();
+            if (!content || !auth.currentUser) return;
+
+            await db.collection("intel_posts").doc(postId).collection("comments").add({
+                content: content,
+                alias: "ANONYMOUS",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            await db.collection("intel_posts").doc(postId).update({
+                comment_count: firebase.firestore.FieldValue.increment(1)
+            });
+
+            input.value = "";
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loadPost();
+                loadComments();
+            } else {
+                window.location.href = `university.html?uni=${uniId}`;
+            }
+        });
+    </script>
+</body>
+</html>
+>>>>>>> 7957529512e5d0bf4b6cbc0e021469c83042b0b6

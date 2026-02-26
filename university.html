@@ -871,7 +871,7 @@
             <div style="background: var(--intel-card); border: 1px solid var(--border-gray); border-radius: 16px; padding: 24px; max-width: 500px; margin: 0 auto; width: 100%;">
                 <p style="color: var(--accent-color); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; font-size: 12px;">Personal Intelligence Beacons</p>
                 <p style="font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 20px;">
-                    Your friends are your first responders. We're launching a tiered beacon system that allows you to alert your friend group for situations that don't always feel like emergencies but deserve some notice.
+                    Your friends are your first responders. We're launching a system that allows you to alert your friend group for situations that don't always feel like emergencies but deserve some notice.
                 </p>
                 <div class="beacon-grid">
                     <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-blue);">
@@ -947,6 +947,27 @@
 
         let currentBars = [], currentFood = [], lastUpdatedVenueId = null;
         let postLimit = 15;
+
+        // --- OPTION B: STALE-WHILE-REVALIDATE IMPLEMENTATION ---
+        function loadStaleData() {
+            const cachedBars = localStorage.getItem(`cachedBars_${uniId}`);
+            const cachedFood = localStorage.getItem(`cachedFood_${uniId}`);
+            
+            if (cachedBars) {
+                currentBars = JSON.parse(cachedBars);
+                console.log("Instant Load: Bars from Cache");
+            }
+            if (cachedFood) {
+                currentFood = JSON.parse(cachedFood);
+                console.log("Instant Load: Food from Cache");
+            }
+            
+            if (cachedBars || cachedFood) {
+                renderCurrentLists();
+            }
+        }
+        // Run immediately to kill the 2-second flash
+        loadStaleData();
 
         // --- CONTEXT-AWARE REFINERY ALGORITHM ---
         function calculateDynamicWait(docData) {
@@ -1293,8 +1314,21 @@
             });
         }
         
-        db.collection("universities").doc(uniId).collection("bars").orderBy("display_order", "asc").onSnapshot(snap => { currentBars = []; snap.forEach(doc => currentBars.push({ id: doc.id, ...doc.data() })); renderCurrentLists(); });
-        db.collection("universities").doc(uniId).collection("food-joints").orderBy("display_order", "asc").onSnapshot(snap => { currentFood = []; snap.forEach(doc => currentFood.push({ id: doc.id, ...doc.data() })); renderCurrentLists(); });
+        db.collection("universities").doc(uniId).collection("bars").orderBy("display_order", "asc").onSnapshot(snap => { 
+            currentBars = []; 
+            snap.forEach(doc => currentBars.push({ id: doc.id, ...doc.data() })); 
+            // Silent Update: Save fresh data to cache
+            localStorage.setItem(`cachedBars_${uniId}`, JSON.stringify(currentBars));
+            renderCurrentLists(); 
+        });
+
+        db.collection("universities").doc(uniId).collection("food-joints").orderBy("display_order", "asc").onSnapshot(snap => { 
+            currentFood = []; 
+            snap.forEach(doc => currentFood.push({ id: doc.id, ...doc.data() })); 
+            // Silent Update: Save fresh data to cache
+            localStorage.setItem(`cachedFood_${uniId}`, JSON.stringify(currentFood));
+            renderCurrentLists(); 
+        });
         
         window.reportIntel = async function(col, docId, newTime) {
             if(!auth.currentUser) return;

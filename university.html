@@ -948,26 +948,72 @@
         let currentBars = [], currentFood = [], lastUpdatedVenueId = null;
         let postLimit = 15;
 
-        // --- OPTION B: STALE-WHILE-REVALIDATE IMPLEMENTATION ---
-        function loadStaleData() {
-            const cachedBars = localStorage.getItem(`cachedBars_${uniId}`);
-            const cachedFood = localStorage.getItem(`cachedFood_${uniId}`);
-            
-            if (cachedBars) {
-                currentBars = JSON.parse(cachedBars);
-                console.log("Instant Load: Bars from Cache");
-            }
-            if (cachedFood) {
-                currentFood = JSON.parse(cachedFood);
-                console.log("Instant Load: Food from Cache");
-            }
-            
-            if (cachedBars || cachedFood) {
+        // --- NEW WAY: POLLING FUNCTION ---
+        async function fetchAllData() {
+            console.log("Alarm triggered: Fetching fresh data from the desk...");
+            try {
+                // Fetch Bars
+                const barSnap = await db.collection("universities").doc(uniId).collection("bars").orderBy("display_order", "asc").get();
+                currentBars = barSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Fetch Food Joints
+                const foodSnap = await db.collection("universities").doc(uniId).collection("food-joints").orderBy("display_order", "asc").get();
+                currentFood = foodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Render lists
                 renderCurrentLists();
+                
+                // Fetch Intel Feed
+                await fetchIntelFeed();
+            } catch (error) {
+                console.error("Error during poll:", error);
             }
         }
-        // Run immediately to kill the 2-second flash
-        loadStaleData();
+
+        async function fetchIntelFeed() {
+            try {
+                const snapshot = await db.collection("intel_posts")
+                    .where("university_id", "==", uniId)
+                    .orderBy("timestamp", "desc")
+                    .limit(postLimit + 1)
+                    .get();
+                
+                const feed = document.getElementById('intel-feed');
+                if (!feed) return;
+                let posts = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if ((data.flags || 0) < 5) { posts.push({ id: doc.id, ...data }); }
+                });
+                const hasMore = posts.length > postLimit;
+                const displayPosts = posts.slice(0, postLimit);
+                document.getElementById('view-more-posts').style.display = hasMore ? 'block' : 'none';
+                feed.innerHTML = "";
+                displayPosts.forEach(data => {
+                    const card = document.createElement('div'); card.className = 'intel-card';
+                    card.onclick = () => openThread(data.id);
+                    card.innerHTML = `
+                        <div class="card-main">
+                            <div class="vote-sidebar">
+                                <button class="vote-btn" onclick="votePost('${data.id}', 1, event)">▲</button>
+                                <span class="vote-count" id="vote-count-${data.id}">${data.upvotes || 0}</span>
+                                <button class="vote-btn" onclick="votePost('${data.id}', -1, event)">▼</button>
+                            </div>
+                            <div class="intel-content">
+                                <div class="intel-meta"><strong>${data.alias}</strong> • ${formatTimeAgo(data.timestamp)}</div>
+                                <div class="intel-text">${data.content}</div>
+                                <div class="intel-actions">
+                                    <button class="reply-trigger">💬 ${data.comment_count || 0} Comments</button>
+                                    <button class="flag-btn" onclick="flagPost('${data.id}', event)">Flag</button>
+                                </div>
+                            </div>
+                        </div>`;
+                    feed.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Error fetching feed:", error);
+            }
+        }
 
         // --- CONTEXT-AWARE REFINERY ALGORITHM ---
         function calculateDynamicWait(docData) {
@@ -976,23 +1022,18 @@
             const currentDay = dayNames[now.getDay()];
             const currentHour = now.getHours();
             
-            // 1. SLOTTING: Find current 30-min window
             const hoursStr = currentHour.toString().padStart(2, '0');
             const minutesStr = now.getMinutes() < 30 ? "00" : "30";
             const baselineKey = `${currentDay}_${hoursStr}${minutesStr}`;
 
-            // 2. THE ANCHOR: Use expert baseline Map
             const baselines = docData.historical_baselines || {};
             const anchor = baselines[baselineKey] || 0; 
 
-            // 3. DEFINE PEAK WINDOW (Thu/Fri/Sat 9pm - 2am)
             const isPeakDay = ["Thu", "Fri", "Sat"].includes(currentDay) || (currentDay === "Sun" && currentHour < 2);
             const isPeakHour = (currentHour >= 21 || currentHour < 2);
             const isPeakWindow = isPeakDay && isPeakHour;
 
-            // 4. GET FRESH REPORTS
             const reports = docData.recent_reports || [];
-            const fiveMinsAgo = now.getTime() - (5 * 60 * 1000);
             const fifteenMinsAgo = now.getTime() - (15 * 60 * 1000);
             
             const freshReports = reports.filter(r => {
@@ -1006,28 +1047,17 @@
             const values = freshReports.map(r => r.value).sort((a, b) => a - b);
             const medianReport = values[Math.floor(values.length / 2)];
 
-            // 5. THE GATEKEEPER LOGIC
             if (isPeakWindow) {
-                // PEAK MODE: High priority to user reports
                 userConsensus = medianReport;
             } else {
-                // OFF-PEAK MODE: Strict anti-troll filter
                 const superFresh = freshReports.filter(r => {
                     const rTime = r.timestamp.toDate ? r.timestamp.toDate().getTime() : r.timestamp;
-                    return rTime > fiveMinsAgo;
+                    return rTime > (now.getTime() - 300000);
                 });
-
-                // Check for consensus among a group of 3+
                 const isConsistent = superFresh.length >= 3 && (Math.max(...superFresh.map(r => r.value)) - Math.min(...superFresh.map(r => r.value)) <= 5);
-
-                if (isConsistent) {
-                    userConsensus = medianReport; // Validated group overrules baseline
-                } else {
-                    userConsensus = anchor; // Solo reports are ignored outside peak hours
-                }
+                if (isConsistent) { userConsensus = medianReport; } else { userConsensus = anchor; }
             }
 
-            // 6. DRIFT CALCULATION
             const latestTS = Math.max(...freshReports.map(r => r.timestamp.toDate ? r.timestamp.toDate().getTime() : r.timestamp));
             const minsOld = (now.getTime() - latestTS) / 60000;
             const trustWeight = Math.max(0, (60 - minsOld) / 60);
@@ -1043,7 +1073,7 @@
 
         function openDeals(venueName, encodedDeal) {
             document.getElementById('modal-venue-name').innerText = venueName.toUpperCase();
-            const dealText = encodedDeal ? decodeURIComponent(encodedDeal) : "Contact us at partners@collegenightlive.com if you would like to have your deals posted here.";
+            const dealText = encodedDeal ? decodeURIComponent(encodedDeal) : "No active special deals right now.";
             document.getElementById('modal-deal-text').innerText = dealText;
             document.getElementById('deals-modal').style.display = 'flex';
         }
@@ -1090,14 +1120,12 @@
             const userNav = document.getElementById('user-nav');
 
             if (user) {
-                // --- ADDED USER REGISTRATION TRACKING ---
                 await db.collection("users").doc(user.uid).set({
                     name: user.displayName,
                     email: user.email,
                     lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
                     photo: user.photoURL
                 }, { merge: true });
-                // ------------------------------------------
 
                 if (loginOverlay) loginOverlay.style.display = 'none';
                 document.body.classList.remove('logged-out');
@@ -1121,7 +1149,6 @@
         function changeSchool(newUni) { window.location.href = `university.html?uni=${newUni}`; }
         function handleMainPostKey(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitIntel(); } }
 
-        // --- YIK YAK STYLE ANONYMOUS ARCHITECTURE ---
         async function submitIntel() {
             const content = document.getElementById('intelInput').value.trim();
             if (!content || !auth.currentUser) return;
@@ -1138,15 +1165,21 @@
                 deleteAt: firebase.firestore.Timestamp.fromDate(expiryDate)
             });
             document.getElementById('intelInput').value = "";
+            await fetchIntelFeed(); // Optimistic refresh after posting
         }
 
         async function votePost(docId, change, event) {
             if(!auth.currentUser) return;
-            if (event) event.stopPropagation(); // PREVENTS REDIRECT WHEN VOTING
+            if (event) event.stopPropagation();
             const voteKey = `voted_${docId}`;
             if(localStorage.getItem(voteKey)) return; 
 
             localStorage.setItem(voteKey, 'true'); 
+            
+            // Optimistic UI Update
+            const countEl = document.getElementById(`vote-count-${docId}`);
+            if(countEl) countEl.innerText = parseInt(countEl.innerText) + change;
+
             await db.collection("intel_posts").doc(docId).update({
                 upvotes: firebase.firestore.FieldValue.increment(change)
             });
@@ -1162,52 +1195,13 @@
             window.location.href = `post.html?id=${postId}&uni=${uniId}`;
         }
 
-        function loadMorePosts() { postLimit += 15; initFeedListener(); }
+        function loadMorePosts() { postLimit += 15; fetchIntelFeed(); }
 
-        let feedUnsubscribe = null;
         function initFeedListener() {
-            if (feedUnsubscribe) feedUnsubscribe();
-            feedUnsubscribe = db.collection("intel_posts")
-                .where("university_id", "==", uniId)
-                .orderBy("timestamp", "desc")
-                .limit(postLimit + 1)
-                .onSnapshot(snapshot => {
-                    const feed = document.getElementById('intel-feed');
-                    if (!feed) return;
-                    let posts = [];
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        if ((data.flags || 0) < 5) { posts.push({ id: doc.id, ...data }); }
-                    });
-                    const hasMore = posts.length > postLimit;
-                    const displayPosts = posts.slice(0, postLimit);
-                    document.getElementById('view-more-posts').style.display = hasMore ? 'block' : 'none';
-                    feed.innerHTML = "";
-                    displayPosts.forEach(data => {
-                        const card = document.createElement('div'); card.className = 'intel-card';
-                        card.onclick = () => openThread(data.id); // MAKE CARD CLICKABLE
-                        card.innerHTML = `
-                            <div class="card-main">
-                                <div class="vote-sidebar">
-                                    <button class="vote-btn" onclick="votePost('${data.id}', 1, event)">▲</button>
-                                    <span class="vote-count" id="vote-count-${data.id}">${data.upvotes || 0}</span>
-                                    <button class="vote-btn" onclick="votePost('${data.id}', -1, event)">▼</button>
-                                </div>
-                                <div class="intel-content">
-                                    <div class="intel-meta"><strong>${data.alias}</strong> • ${formatTimeAgo(data.timestamp)}</div>
-                                    <div class="intel-text">${data.content}</div>
-                                    <div class="intel-actions">
-                                        <button class="reply-trigger">💬 ${data.comment_count || 0} Comments</button>
-                                        <button class="flag-btn" onclick="flagPost('${data.id}', event)">Flag</button>
-                                    </div>
-                                </div>
-                            </div>`;
-                        feed.appendChild(card);
-                    });
-                });
+            // Initial manual load
+            fetchIntelFeed();
         }
 
-        // --- PHOTO HANDLERS ---
         function triggerCamera(col, id) { 
             currentVenueForPhoto = id; 
             currentColForPhoto = col; 
@@ -1217,35 +1211,22 @@
         async function handlePhotoUpload(event) {
             const file = event.target.files[0]; 
             if (!file || !currentVenueForPhoto) return;
-            
             const path = `venue_photos/${uniId}/${currentVenueForPhoto}.jpg`;
             const storageRef = storage.ref().child(path);
-            
             try {
-                console.log("Starting Mobile Upload...");
-                const metadata = { cacheControl: 'public,max-age=300' };
-                const snapshot = await storageRef.put(file, metadata);
-                
-                // FORCE wait for the permanent Download URL
+                const snapshot = await storageRef.put(file, { cacheControl: 'public,max-age=300' });
                 const url = await snapshot.ref.getDownloadURL();
-                
                 await db.collection("universities").doc(uniId).collection(currentColForPhoto).doc(currentVenueForPhoto).update({
                     line_photo_url: url,
                     line_photo_timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                
-                alert("INTEL VERIFIED: Photo is now live.");
-                location.reload(); 
-            } catch (err) { 
-                console.error("Upload Error:", err);
-                alert("Verification failed: " + err.message); 
-            }
+                alert("INTEL VERIFIED");
+                fetchAllData(); 
+            } catch (err) { alert("Verification failed: " + err.message); }
         }
 
         function viewPhoto(name, url, ts) {
-            // Hardened Cache Buster for Mobile
             const cacheBuster = url.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
-            
             document.getElementById('photo-venue-title').innerText = name.toUpperCase();
             document.getElementById('line-photo-img').src = url + cacheBuster;
             document.getElementById('photo-time-label').innerText = "TAKEN: " + formatTimeAgo(ts);
@@ -1265,9 +1246,6 @@
             list.innerHTML = "";
             const options = isFood ? [0, 5, 10, 15, 20, 25] : [0, 5, 15, 25, 40, 60];
             const collectionName = isFood ? 'food-joints' : 'bars';
-            const affiliateLabel = isFood ? "Hungry?" : "Need a Ride?";
-            const affiliateUrl = isFood ? "https://www.grubhub.com" : "https://www.lyft.com";
-
             const cooldown = localStorage.getItem('vouch_cooldown');
             const vouchedVenueId = localStorage.getItem('vouched_venue_id');
             const isLocked = cooldown && Date.now() < parseInt(cooldown);
@@ -1276,93 +1254,50 @@
                 const waitRange = calculateDynamicWait(data);
                 const minutes = parseInt(waitRange.split('-')[0]) || 0;
                 const closed = (data.ai_reason || "").toLowerCase().includes("closed");
-                const dealValue = data.current_deal ? encodeURIComponent(data.current_deal) : "";
-                
-                // PHOTO ICON LOGIC
                 const isAdmin = auth.currentUser && admins.includes(auth.currentUser.email);
                 const hasPhoto = data.line_photo_url && data.line_photo_url !== "";
-                let photoIcon = "";
-                
-                if (isAdmin) {
-                    photoIcon = `<span class="photo-trigger" onclick="triggerCamera('${collectionName}', '${data.id}')">📷</span>`;
-                    if (hasPhoto) {
-                        photoIcon += `<span class="photo-trigger" style="margin-left:8px" onclick="viewPhoto('${data.name}', '${data.line_photo_url}', '${data.line_photo_timestamp}')">👁️</span>`;
-                    }
-                } else if (hasPhoto) {
-                    photoIcon = `<span class="photo-trigger" onclick="viewPhoto('${data.name}', '${data.line_photo_url}', '${data.line_photo_timestamp}')">👁️</span>`;
-                }
+                let photoIcon = isAdmin ? `<span class="photo-trigger" onclick="triggerCamera('${collectionName}', '${data.id}')">📷</span>` : "";
+                if (hasPhoto) photoIcon += `<span class="photo-trigger" style="margin-left:8px" onclick="viewPhoto('${data.name}', '${data.line_photo_url}', '${data.line_photo_timestamp}')">👁️</span>`;
 
                 let fillWidth = 0; let statusColor = "var(--wait-green)";
                 if (isFood) {
                     if (minutes <= 5) fillWidth = 25;
-                    else if (minutes <= 20) { fillWidth = 25 + ((minutes - 5) / 15) * 50; statusColor = "var(--wait-yellow)"; }
+                    else if (minutes <= 20) { fillWidth = 75; statusColor = "var(--wait-yellow)"; }
                     else { fillWidth = 100; statusColor = "var(--wait-red)"; }
                 } else {
                     if (minutes <= 15) fillWidth = 25;
-                    else if (minutes <= 45) { fillWidth = 25 + ((minutes - 15) / 30) * 50; statusColor = "var(--wait-yellow)"; }
+                    else if (minutes <= 45) { fillWidth = 75; statusColor = "var(--wait-yellow)"; }
                     else { fillWidth = 100; statusColor = "var(--wait-red)"; }
                 }
                 if (closed) { fillWidth = 100; statusColor = "var(--status-closed)"; }
                 
-                const row = document.createElement("div"); row.className = `row-item ${data.id === lastUpdatedVenueId ? 'was-updated' : ''}`;
-                let actionSection = isLocked ? (data.id === vouchedVenueId ? `<div class="vouch-thanks-msg">✅ THANK YOU! <span class="cooldown-timer" id="timer-${data.id}"></span></div>` : "") : `<div class="intel-options">${options.map(t => `<button onclick="reportIntel('${collectionName}', '${data.id}', ${t})">${t === 0 ? '0m' : (t === 25 && isFood) ? '25m+' : (t === 60 && !isFood) ? '60m+' : t + 'm'}</button>`).join('')}</div>`;
-                const displayString = closed ? "CLOSED" : (waitRange === "60+" ? "60+m" : waitRange + "m");
-
-                row.innerHTML = `<div class="row-top"><div class="venue-name-group"><div class="venue-name">${data.name}</div>${photoIcon}</div><div class="wait-time-text">${displayString}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section"><a href="${affiliateUrl}" target="_blank" class="affiliate-link-btn">${affiliateLabel}</a><button class="deals-btn" onclick="openDeals('${data.name.replace(/'/g, "\\'")}', '${dealValue}')">Deals</button>${actionSection}</div>`;
+                const row = document.createElement("div"); row.className = `row-item`;
+                let actionSection = isLocked ? (data.id === vouchedVenueId ? `<div class="vouch-thanks-msg">✅ THANK YOU! <span class="cooldown-timer" id="timer-${data.id}"></span></div>` : "") : `<div class="intel-options">${options.map(t => `<button onclick="reportIntel('${collectionName}', '${data.id}', ${t})">${t}m</button>`).join('')}</div>`;
+                row.innerHTML = `<div class="row-top"><div class="venue-name-group"><div class="venue-name">${data.name}</div>${photoIcon}</div><div class="wait-time-text">${closed ? "CLOSED" : waitRange + "m"}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section"><button class="deals-btn" onclick="openDeals('${data.name.replace(/'/g, "\\'")}', '${data.current_deal || ""}')">Deals</button>${actionSection}</div>`;
                 list.appendChild(row);
                 if (isLocked && data.id === vouchedVenueId) startVisualReset(data.id, parseInt(cooldown));
             });
         }
         
-        db.collection("universities").doc(uniId).collection("bars").orderBy("display_order", "asc").onSnapshot(snap => { 
-            currentBars = []; 
-            snap.forEach(doc => currentBars.push({ id: doc.id, ...doc.data() })); 
-            // Silent Update: Save fresh data to cache
-            localStorage.setItem(`cachedBars_${uniId}`, JSON.stringify(currentBars));
-            renderCurrentLists(); 
-        });
-
-        db.collection("universities").doc(uniId).collection("food-joints").orderBy("display_order", "asc").onSnapshot(snap => { 
-            currentFood = []; 
-            snap.forEach(doc => currentFood.push({ id: doc.id, ...doc.data() })); 
-            // Silent Update: Save fresh data to cache
-            localStorage.setItem(`cachedFood_${uniId}`, JSON.stringify(currentFood));
-            renderCurrentLists(); 
-        });
-        
         window.reportIntel = async function(col, docId, newTime) {
             if(!auth.currentUser) return;
-
-            const reportEntry = {
-                value: parseInt(newTime),
-                timestamp: firebase.firestore.Timestamp.now(),
-                user: auth.currentUser.uid
-            };
-
             const docRef = db.collection("universities").doc(uniId).collection(col).doc(docId);
-            
             try {
                 await docRef.update({
-                    recent_reports: firebase.firestore.FieldValue.arrayUnion(reportEntry),
+                       recent_reports: firebase.firestore.FieldValue.arrayUnion({ value: parseInt(newTime), timestamp: firebase.firestore.Timestamp.now(), user: auth.currentUser.uid }),
                     wait_time: newTime, 
                     last_updated: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
-                const expiry = Date.now() + (5 * 60 * 1000);
-                localStorage.setItem('vouch_cooldown', expiry);
+                localStorage.setItem('vouch_cooldown', Date.now() + 300000);
                 localStorage.setItem('vouched_venue_id', docId);
-                lastUpdatedVenueId = docId;
-                renderCurrentLists();
-            } catch (error) {
-                console.error("Error reporting intel:", error);
-            }
+                await fetchAllData();
+            } catch (error) { console.error(error); }
         };
 
         function startVisualReset(venueId, expiry) {
             const timerEl = document.getElementById(`timer-${venueId}`);
             const update = () => {
-                const now = Date.now();
-                const diff = expiry - now;
+                const diff = expiry - Date.now();
                 if (diff <= 0) { localStorage.removeItem('vouched_venue_id'); renderCurrentLists(); return; }
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
@@ -1372,19 +1307,9 @@
             update();
         }
 
-        async function triggerBeacon(type) {
-            if (!auth.currentUser) return;
-            try {
-                const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
-                const mapsLink = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                const battery = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve({level: 1}));
-                await db.collection("safety_alerts").add({
-                    user_name: auth.currentUser.displayName, type: type,
-                    location: mapsLink, battery: Math.round(battery.level * 100), timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                alert(`${type} Beacon sent!`);
-            } catch (err) { alert("Enable GPS to send beacons."); }
-        }
+        // START THE NEW WAY
+        fetchAllData(); // First visit
+        setInterval(fetchAllData, 60000); // 60-second alarm
 
         updateHeader('wait-times');
     </script>

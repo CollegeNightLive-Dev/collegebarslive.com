@@ -9,7 +9,7 @@
     <meta name='impact-site-verification' value='e2283d38-22b0-4195-8e5c-876111b88e82'>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Intel Feed | The Refinery</title>
+    <title>Intel Feed </title>
     <style>
         :root {
             --bg-black: #000000;
@@ -291,6 +291,19 @@
             justify-content: center; 
             gap: 10px; 
             font-size: 1rem; 
+        }
+        .login-footer-text {
+            margin-top: 15px;
+            font-size: 10px;
+            color: var(--text-dim);
+            text-align: center;
+            max-width: 250px;
+            line-height: 1.4;
+        }
+
+        .login-footer-text a {
+            color: var(--text-main);
+            text-decoration: underline;
         }
 
         .dashboard-container { 
@@ -802,7 +815,7 @@
             <h3 id="photo-venue-title" style="font-size:12px; letter-spacing:2px; margin-bottom:15px; text-transform:uppercase;">LIVE LINE INTEL</h3>
             <img id="line-photo-img" src="" alt="Line Intel">
             <span id="photo-time-label" class="modal-timestamp"></span>
-            <button class="logout-btn" style="width:100%; padding:12px;" onclick="closePhotoModal()">BACK TO REFINERY</button>
+            <button class="logout-btn" style="width:100%; padding:12px;" onclick="closePhotoModal()">BACK TO PAGE</button>
         </div>
     </div>
 
@@ -820,6 +833,9 @@
         <button class="login-btn" onclick="loginWithGoogle()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Continue with Google
         </button>
+        <p class="login-footer-text">
+        By logging in, you are agreeing to our <a href="terms.html">Terms and Privacy</a>.
+        </p>
     </div>
 
     <div id="user-nav" class="user-nav-container">
@@ -1029,7 +1045,7 @@
             const baselines = docData.historical_baselines || {};
             const anchor = baselines[baselineKey] || 0; 
 
-            const isPeakDay = ["Thu", "Fri", "Sat"].includes(currentDay) || (currentDay === "Sun" && currentHour < 2);
+            const isPeakDay = ["Fri", "Sat"].includes(currentDay) || (currentDay === "Sun" && currentHour < 2);
             const isPeakHour = (currentHour >= 21 || currentHour < 2);
             const isPeakWindow = isPeakDay && isPeakHour;
 
@@ -1054,7 +1070,7 @@
                     const rTime = r.timestamp.toDate ? r.timestamp.toDate().getTime() : r.timestamp;
                     return rTime > (now.getTime() - 300000);
                 });
-                const isConsistent = superFresh.length >= 3 && (Math.max(...superFresh.map(r => r.value)) - Math.min(...superFresh.map(r => r.value)) <= 5);
+                const isConsistent = superFresh.length >= 3 && (Math.max(...superFresh.map(r => r.value)) - Math.min(...superFresh.map(r => r.value)) <= 10);
                 if (isConsistent) { userConsensus = medianReport; } else { userConsensus = anchor; }
             }
 

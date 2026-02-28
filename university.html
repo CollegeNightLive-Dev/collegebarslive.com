@@ -48,7 +48,10 @@
             animation: fadeIn 0.5s ease-out forwards; 
             opacity: 0;
         }
-
+        body.logged-out {
+            overflow: hidden !important; 
+            height: 100vh;
+        }
         @keyframes fadeIn { 
             from { opacity: 0; transform: translateY(8px); } 
             to { opacity: 1; transform: translateY(0); } 
@@ -965,71 +968,9 @@
         let postLimit = 15;
 
         // --- NEW WAY: POLLING FUNCTION ---
-        async function fetchAllData() {
-            console.log("Alarm triggered: Fetching fresh data from the desk...");
-            try {
-                // Fetch Bars
-                const barSnap = await db.collection("universities").doc(uniId).collection("bars").orderBy("display_order", "asc").get();
-                currentBars = barSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                // Fetch Food Joints
-                const foodSnap = await db.collection("universities").doc(uniId).collection("food-joints").orderBy("display_order", "asc").get();
-                currentFood = foodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
 
-                // Render lists
-                renderCurrentLists();
-                
-                // Fetch Intel Feed
-                await fetchIntelFeed();
-            } catch (error) {
-                console.error("Error during poll:", error);
-            }
-        }
-
-        async function fetchIntelFeed() {
-            try {
-                const snapshot = await db.collection("intel_posts")
-                    .where("university_id", "==", uniId)
-                    .orderBy("timestamp", "desc")
-                    .limit(postLimit + 1)
-                    .get();
-                
-                const feed = document.getElementById('intel-feed');
-                if (!feed) return;
-                let posts = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if ((data.flags || 0) < 5) { posts.push({ id: doc.id, ...data }); }
-                });
-                const hasMore = posts.length > postLimit;
-                const displayPosts = posts.slice(0, postLimit);
-                document.getElementById('view-more-posts').style.display = hasMore ? 'block' : 'none';
-                feed.innerHTML = "";
-                displayPosts.forEach(data => {
-                    const card = document.createElement('div'); card.className = 'intel-card';
-                    card.onclick = () => openThread(data.id);
-                    card.innerHTML = `
-                        <div class="card-main">
-                            <div class="vote-sidebar">
-                                <button class="vote-btn" onclick="votePost('${data.id}', 1, event)">▲</button>
-                                <span class="vote-count" id="vote-count-${data.id}">${data.upvotes || 0}</span>
-                                <button class="vote-btn" onclick="votePost('${data.id}', -1, event)">▼</button>
-                            </div>
-                            <div class="intel-content">
-                                <div class="intel-meta"><strong>${data.alias}</strong> • ${formatTimeAgo(data.timestamp)}</div>
-                                <div class="intel-text">${data.content}</div>
-                                <div class="intel-actions">
-                                    <button class="reply-trigger">💬 ${data.comment_count || 0} Comments</button>
-                                    <button class="flag-btn" onclick="flagPost('${data.id}', event)">Flag</button>
-                                </div>
-                            </div>
-                        </div>`;
-                    feed.appendChild(card);
-                });
-            } catch (error) {
-                console.error("Error fetching feed:", error);
-            }
-        }
+        
 
         // --- CONTEXT-AWARE REFINERY ALGORITHM ---
         function calculateDynamicWait(docData) {
@@ -1324,10 +1265,83 @@
         }
 
         // START THE NEW WAY
-        fetchAllData(); // First visit
-        setInterval(fetchAllData, 60000); // 60-second alarm
+        // START THE NEW REAL-TIME WAY
+        // --- THE REAL-TIME SYNC ENGINE ---
+function startRealTimeSync() {
+    console.log("Sync Active: Listening for live campus intel...");
+
+    // 1. LISTEN FOR BAR UPDATES
+    db.collection("universities").doc(uniId).collection("bars")
+      .orderBy("display_order", "asc")
+      .onSnapshot((snapshot) => {
+          currentBars = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          renderCurrentLists();
+          console.log("Real-time Update: Bars synced.");
+      }, (error) => console.error("Bar Sync Error:", error));
+
+    // 2. LISTEN FOR FOOD UPDATES
+    db.collection("universities").doc(uniId).collection("food-joints")
+      .orderBy("display_order", "asc")
+      .onSnapshot((snapshot) => {
+          currentFood = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          renderCurrentLists();
+          console.log("Real-time Update: Food synced.");
+      }, (error) => console.error("Food Sync Error:", error));
+
+    // 3. LISTEN FOR LIVE INTEL FEED
+    db.collection("intel_posts")
+      .where("university_id", "==", uniId)
+      .orderBy("timestamp", "desc")
+      .limit(postLimit)
+      .onSnapshot((snapshot) => {
+          const feed = document.getElementById('intel-feed');
+          if (!feed) return;
+          
+          let posts = [];
+          snapshot.forEach(doc => {
+              const data = doc.data();
+              if ((data.flags || 0) < 5) posts.push({ id: doc.id, ...data });
+          });
+
+          // Reuse your existing rendering logic but update the UI immediately
+          renderRealTimeFeed(posts);
+          console.log("Real-time Update: Intel Feed synced.");
+      }, (error) => console.error("Feed Sync Error:", error));
+}
+
+// Separate helper for feed rendering to avoid duplication
+    function renderRealTimeFeed(posts) {
+        const feed = document.getElementById('intel-feed');
+        if (!feed) return;
+        feed.innerHTML = "";
+        posts.forEach(data => {
+            const card = document.createElement('div');
+            card.className = 'intel-card';
+            card.onclick = () => openThread(data.id);
+            card.innerHTML = `
+                <div class="card-main">
+                    <div class="vote-sidebar">
+                        <button class="vote-btn" onclick="votePost('${data.id}', 1, event)">▲</button>
+                        <span class="vote-count" id="vote-count-${data.id}">${data.upvotes || 0}</span>
+                        <button class="vote-btn" onclick="votePost('${data.id}', -1, event)">▼</button>
+                    </div>
+                    <div class="intel-content">
+                        <div class="intel-meta"><strong>${data.alias}</strong> • ${formatTimeAgo(data.timestamp)}</div>
+                        <div class="intel-text">${data.content}</div>
+                        <div class="intel-actions">
+                            <button class="reply-trigger">💬 ${data.comment_count || 0} Comments</button>
+                            <button class="flag-btn" onclick="flagPost('${data.id}', event)">Flag</button>
+                        </div>
+                    </div>
+                </div>`;
+            feed.appendChild(card);
+        });
+    }
+        startRealTimeSync();
 
         updateHeader('wait-times');
+
+    
     </script>
 </body>
 </html>

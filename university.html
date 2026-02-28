@@ -987,7 +987,7 @@
             const anchor = baselines[baselineKey] || 0; 
 
             const isPeakDay = ["Fri", "Sat"].includes(currentDay) || (currentDay === "Sun" && currentHour < 2);
-            const isPeakHour = (currentHour >= 21 || currentHour < 2);
+            const isPeakHour = (currentHour >= 22.5 || currentHour < 1);
             const isPeakWindow = isPeakDay && isPeakHour;
 
             const reports = docData.recent_reports || [];

@@ -2,60 +2,52 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 
 # 1. SETUP
+# Make sure your serviceAccountKey.json is in the same directory!
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-def rank_all_expansion_schools():
-    print("🚀 Initializing Popularity Ranking Intelligence for 2026...")
+def import_osu_venue(venue_name, doc_id, display_rank=0.5):
+    print(f"🚀 Importing {venue_name} into Ohio State Campus Intelligence...")
 
-    # 2. DEFINE POPULARITY MAP (Based on Campus Intel)
-    # The order of the list determines the display_order (1, 2, 3...)
-    rankings = {
-        "cincinnati": {
-            "bars": ["murphys-pub", "dive-bar", "ladder-19", "top-cats", "macs-pizza-pub"],
-            "food-joints": ["skyline-chili", "raising-canes", "adriaticos", "dp-dough", "swensons-drive-in"]
-        },
-        "miami-oh": {
-            "bars": ["brick-street", "circle-bar", "mac-and-joes", "steinkeller", "skippers-pub"],
-            "food-joints": ["bagel-and-deli", "brunos-pizza", "fiesta-charra", "doughbys", "el-burrito-loco"]
-        },
-        "ohio-university": {
-            "bars": ["the-crystal", "the-union", "the-overhang", "luckys-sports-tavern", "the-pub-bar-grill"],
-            "food-joints": ["bagel-street-deli", "goodfellas-pizza", "union-street-diner", "keystones-mac-shack", "obettys-red-hot"]
-        },
-        "purdue": {
-            "bars": ["harrys-chocolate-shop", "brothers-bar-grill", "neon-cactus", "the-where-else", "twisted-hammer"],
-            "food-joints": ["triple-xxx-family-restaurant", "mad-mushroom-pizza", "famous-franks", "ajs-burgers-beef", "taste-of-india"]
-        }
+    # 2. GENERATE FLAT ZERO BASELINES
+    # Ensures every 30-minute block across 7 days is initialized to 0
+    days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    baselines = {}
+    for day in days:
+        for hour in range(24):
+            for minute in ["00", "30"]:
+                time_key = f"{day}_{hour:02d}{minute}"
+                baselines[time_key] = 0
+
+    # 3. DEFINE THE SCALE-READY DATA STRUCTURE
+    data = {
+        "name": venue_name,
+        "display_order": display_rank,  # Higher numbers = higher on the list
+        "wait_time": 0,
+        "ai_reason": "Open",
+        "historical_baselines": baselines,
+        "recent_reports": [],
+        "last_updated": firestore.SERVER_TIMESTAMP
     }
 
-    # 3. EXECUTE BATCH UPDATES
-    for uni_id, collections in rankings.items():
-        print(f"\n🏫 Processing {uni_id.upper()}...")
+    # 4. EXECUTE THE UPLOAD
+    try:
+        # Path: universities -> ohio-state -> food-joints -> [doc_id]
+        # Note: If Ugly Tuna is technically a "bar" vs "food", 
+        # make sure your frontend points to this 'food-joints' collection.
+        doc_ref = db.collection("universities").document("ohio-state").collection("bars").document(doc_id)
         
-        for col_name, venue_list in collections.items():
-            # First, set a default of 99 to ALL venues in this collection
-            # This ensures any 'extra' venues don't disappear but stay at the bottom
-            try:
-                all_venues = db.collection("universities").document(uni_id).collection(col_name).get()
-                for v in all_venues:
-                    v.reference.update({"display_order": 99})
-                
-                # Now, apply specific rankings (1, 2, 3...)
-                for index, venue_id in enumerate(venue_list):
-                    doc_ref = db.collection("universities").document(uni_id).collection(col_name).document(venue_id)
-                    
-                    if doc_ref.get().exists:
-                        doc_ref.update({"display_order": index + 1})
-                        print(f"   ⭐ {col_name.title()} Rank {index + 1}: {venue_id}")
-                    else:
-                        print(f"   ⚠️ Skipping {venue_id} (Document not found in {uni_id})")
-            
-            except Exception as e:
-                print(f"   ❌ Error processing {col_name} for {uni_id}: {e}")
-
-    print("\n🔥 ALL SCHOOLS UPDATED. Your app will now display venues by popularity.")
+        doc_ref.set(data)
+        print(f"✅ SUCCESS: {venue_name} is now live on the OSU feed!")
+        
+    except Exception as e:
+        print(f"❌ ERROR: Failed to import venue: {e}")
 
 if __name__ == "__main__":
-    rank_all_expansion_schools()
+    # Import Mike's Late Night Slice
+   
+
+    # Import Ugly Tuna 2
+    # Set to 0.7 to place it prominently in the list
+    import_osu_venue("Ugly Tuna 2", "ugly-tuna-2", display_rank=4.5)

@@ -1,290 +1,317 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Post Thread | The Refinery</title>
-    <style>
-<<<<<<< HEAD
-        :root { --bg-black: #000; --border-gray: #1c1c1e; --text-main: #fff; --text-dim: #8e8e93; --accent: #fff; }
-        body { background: var(--bg-black); color: var(--text-main); font-family: -apple-system, sans-serif; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        
-        .thread-nav { padding: 15px 20px; border-bottom: 1px solid var(--border-gray); position: sticky; top: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); z-index: 100; display: flex; justify-content: space-between; align-items: center; }
-        .back-btn { background: none; border: none; color: var(--accent); font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 12px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Post Thread | The Refinery</title>
+<style>
+:root {
+    --bg-black: #000;
+    --bg-dark: #111;
+    --border-gray: #1c1c1e;
+    --text-main: #fff;
+    --text-dim: #8e8e93;
+    --accent: #30d158;
+    --radius: 16px;
+    --font-main: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
 
-        .main-post { padding: 30px 20px; border-bottom: 8px solid var(--border-gray); }
-        .post-text { font-size: 19px; line-height: 1.4; margin-bottom: 10px; }
+* { box-sizing: border-box; }
 
-        /* RECURSIVE NESTING CSS */
-        .comments-section { padding: 20px 20px 150px; }
-        .comment-wrapper { margin-top: 15px; padding-left: 15px; border-left: 1px solid var(--border-gray); position: relative; }
-        .comment-meta { font-size: 10px; color: var(--text-dim); font-weight: 800; margin-bottom: 4px; }
-        .comment-text { font-size: 14px; margin-bottom: 8px; }
-        .reply-btn { background: none; border: none; color: var(--text-dim); font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; }
+body {
+    margin: 0;
+    font-family: var(--font-main);
+    background: var(--bg-black);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
 
-        /* INLINE INPUT */
-        .inline-reply { display: none; margin: 10px 0; }
-        .inline-reply.active { display: flex; flex-direction: column; gap: 8px; }
-        textarea { background: #111; border: 1px solid var(--border-gray); color: #fff; border-radius: 8px; padding: 10px; font-size: 13px; resize: none; font-family: inherit; }
-        
-        .submit-btn { align-self: flex-end; background: var(--accent); color: #000; border: none; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 11px; cursor: pointer; }
-        .bottom-bar { position: fixed; bottom: 0; width: 100%; background: #111; padding: 15px 20px 30px; border-top: 1px solid var(--border-gray); box-sizing: border-box; }
-=======
-        :root {
-            --bg-black: #000000;
-            --border-gray: #1c1c1e;
-            --text-main: #ffffff;
-            --text-dim: #8e8e93;
-            --accent-color: #ffffff;
-            --intel-card: rgba(28, 28, 30, 0.6);
-            --wait-green: #30d158;
-        }
+.thread-nav {
+    position: sticky;
+    top: 0;
+    background: rgba(0,0,0,0.9);
+    backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border-gray);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    z-index: 100;
+}
 
-        body {
-            background-color: var(--bg-black);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            margin: 0; padding: 0;
-            display: flex; flex-direction: column; min-height: 100vh;
-        }
+.back-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
 
-        /* TOP NAVIGATION */
-        .thread-nav {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 15px 20px; border-bottom: 1px solid var(--border-gray);
-            position: sticky; top: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); z-index: 100;
-        }
+.thread-title {
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+}
 
-        .back-btn {
-            background: none; border: none; color: var(--accent-color);
-            font-size: 14px; font-weight: 700; cursor: pointer; text-transform: uppercase;
-        }
+.main-post {
+    padding: 24px 16px;
+    border-bottom: 1px solid var(--border-gray);
+    background: var(--bg-dark);
+}
 
-        /* MAIN POST AREA */
-        .main-post-container { padding: 20px; border-bottom: 8px solid var(--border-gray); }
-        .post-meta { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; font-weight: 600; }
-        .post-text { font-size: 18px; line-height: 1.5; font-weight: 400; margin-bottom: 15px; }
-        
-        /* COMMENTS LIST */
-        .comments-section { flex: 1; padding: 20px 20px 120px; }
-        .comments-header { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; font-weight: 700; }
-        .comment-item { margin-bottom: 24px; padding-left: 12px; border-left: 2px solid var(--accent-color); }
-        .comment-meta { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; font-weight: 700; }
-        .comment-text { font-size: 14px; line-height: 1.4; color: rgba(255,255,255,0.9); }
+.post-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
 
-        /* PERSISTENT INPUT BOX */
-        .comment-input-area {
-            position: fixed; bottom: 0; width: 100%; box-sizing: border-box;
-            background: #1c1c1e; padding: 20px; border-top: 1px solid var(--border-gray);
-            display: flex; gap: 12px; align-items: center;
-        }
+.post-text {
+    font-size: 18px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
 
-        textarea {
-            flex: 1; background: #000; border: 1px solid var(--border-gray);
-            color: #fff; border-radius: 12px; padding: 12px; font-size: 14px;
-            resize: none; outline: none; height: 40px; font-family: inherit;
-        }
+.post-upvotes {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+}
 
-        .send-btn {
-            background: var(--accent-color); color: #000; border: none;
-            padding: 10px 20px; border-radius: 20px; font-weight: 800;
-            font-size: 12px; text-transform: uppercase; cursor: pointer;
-        }
->>>>>>> 7957529512e5d0bf4b6cbc0e021469c83042b0b6
-    </style>
+.comments-section {
+    flex: 1;
+    padding: 12px 8px 120px;
+    overflow-y: auto;
+}
+
+.comment-wrapper {
+    margin-top: 12px;
+    padding: 12px;
+    background: #1a1a1c;
+    border-radius: var(--radius);
+    position: relative;
+}
+
+.comment-meta {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.comment-text {
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.reply-btn, .upvote-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 12px;
+    transition: transform 0.2s;
+}
+
+.reply-btn:hover, .upvote-btn:hover {
+    transform: scale(1.2);
+}
+
+.inline-reply {
+    display: none;
+    margin-top: 8px;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.inline-reply.active {
+    display: flex;
+}
+
+textarea {
+    background: #222;
+    border: 1px solid var(--border-gray);
+    border-radius: var(--radius);
+    padding: 12px;
+    font-size: 14px;
+    color: var(--text-main);
+    font-family: var(--font-main);
+    resize: none;
+    width: 100%;
+}
+
+.submit-btn {
+    align-self: flex-end;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.submit-btn:hover {
+    transform: scale(1.05);
+}
+
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: var(--bg-dark);
+    padding: 12px 16px 24px;
+    border-top: 1px solid var(--border-gray);
+    display: flex;
+    gap: 10px;
+}
+
+.bottom-bar textarea {
+    flex: 1;
+    height: 44px;
+    border-radius: 22px;
+    padding: 12px 16px;
+}
+
+/* Upvote animation */
+.upvote-animate {
+    animation: pop 0.3s ease forwards;
+}
+
+@keyframes pop {
+    0% { transform: scale(1); color: var(--accent); }
+    50% { transform: scale(1.6); color: #fff; }
+    100% { transform: scale(1.2); color: var(--accent); }
+}
+</style>
 </head>
 <body>
 
-    <nav class="thread-nav">
-<<<<<<< HEAD
-        <button class="back-btn" onclick="history.back()">← BACK</button>
-        <div style="font-size: 10px; font-weight: 900; letter-spacing: 2px;">THREAD</div>
-        <div style="width: 40px;"></div>
-    </nav>
+<nav class="thread-nav">
+    <button class="back-btn" onclick="history.back()">← BACK</button>
+    <div class="thread-title">THREAD</div>
+    <div style="width: 40px;"></div>
+</nav>
 
-    <div id="main-post-render" class="main-post"></div>
+<div id="main-post-render" class="main-post"></div>
+<div class="comments-section" id="comments-list"></div>
 
-    <div class="comments-section" id="comments-list">
-        </div>
+<div class="bottom-bar">
+    <textarea id="rootInput" placeholder="Add a comment..."></textarea>
+    <button class="submit-btn" onclick="submitComment('main')">Post</button>
+</div>
 
-    <div class="bottom-bar">
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <textarea id="rootInput" style="flex:1; height: 36px;" placeholder="Add a comment..."></textarea>
-            <button class="submit-btn" onclick="submitComment('main')">Post</button>
-        </div>
-=======
-        <button class="back-btn" onclick="goBack()">← Back</button>
-        <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px;">THREAD</div>
-        <div style="width: 40px;"></div>
-    </nav>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="env.js"></script>
+<script>
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const params = new URLSearchParams(window.location.search);
+const postId = params.get('id');
 
-    <div class="main-post-container" id="main-post-render">
-        <p style="color: var(--text-dim);">Loading intelligence...</p>
-    </div>
+async function loadPost() {
+    const doc = await db.collection("intel_posts").doc(postId).get();
+    if (doc.exists) {
+        const data = doc.data();
+        document.getElementById('main-post-render').innerHTML = `
+            <div class="post-meta">ANONYMOUS • INTEL</div>
+            <div class="post-text">${data.content}</div>
+            <div class="post-upvotes">▲ ${data.upvotes || 0} UPVOTES</div>
+        `;
+    }
+}
 
-    <div class="comments-section">
-        <div class="comments-header">CONVERSATION</div>
-        <div id="comments-list">
-            </div>
-    </div>
+function initComments() {
+    db.collection("intel_posts").doc(postId).collection("comments")
+      .onSnapshot(snap => {
+        const all = [];
+        snap.forEach(doc => all.push({ id: doc.id, ...doc.data() }));
+        renderTree(all);
+      });
+}
 
-    <div class="comment-input-area">
-        <textarea id="replyInput" placeholder="Add an anonymous comment..."></textarea>
-        <button class="send-btn" onclick="submitComment()">Post</button>
->>>>>>> 7957529512e5d0bf4b6cbc0e021469c83042b0b6
-    </div>
+function renderTree(list) {
+    const container = document.getElementById('comments-list');
+    container.innerHTML = "";
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="env.js"></script>
+    function build(parentId) {
+        const children = list
+            .filter(c => (c.parent_id || 'main') === parentId)
+            .sort((a,b) => (b.upvotes || 0) - (a.upvotes || 0)); // Sort by upvotes
 
-    <script>
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-<<<<<<< HEAD
-        const params = new URLSearchParams(window.location.search);
-        const postId = params.get('id');
-
-        async function loadPost() {
-            const doc = await db.collection("intel_posts").doc(postId).get();
-            if (doc.exists) {
-                document.getElementById('main-post-render').innerHTML = `
-                    <div class="comment-meta">ANONYMOUS • INTEL</div>
-                    <div class="post-text">${doc.data().content}</div>
-                    <div style="font-size:11px; color:#30d158; font-weight:800;">▲ ${doc.data().upvotes || 0} UPVOTES</div>
-=======
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const postId = urlParams.get('id');
-        const uniId = urlParams.get('uni') || 'ohio-state';
-
-        function goBack() {
-            window.location.href = `university.html?uni=${uniId}`;
-        }
-
-        // LOAD MAIN POST
-        async function loadPost() {
-            if (!postId) return;
-            const doc = await db.collection("intel_posts").doc(postId).get();
-            if (doc.exists) {
-                const data = doc.data();
-                document.getElementById('main-post-render').innerHTML = `
-                    <div class="post-meta">ANONYMOUS • ${data.university_id.toUpperCase()}</div>
-                    <div class="post-text">${data.content}</div>
-                    <div style="font-size: 12px; color: var(--wait-green); font-weight: 800;">▲ ${data.upvotes || 0} UPVOTES</div>
->>>>>>> 7957529512e5d0bf4b6cbc0e021469c83042b0b6
-                `;
-            }
-        }
-
-<<<<<<< HEAD
-        function initComments() {
-            db.collection("intel_posts").doc(postId).collection("comments").orderBy("timestamp", "asc").onSnapshot(snap => {
-                const all = [];
-                snap.forEach(doc => all.push({ id: doc.id, ...doc.data() }));
-                renderTree(all);
-            });
-        }
-
-        function renderTree(list) {
-            const container = document.getElementById('comments-list');
-            container.innerHTML = "";
-
-            function build(parentId) {
-                const children = list.filter(c => (c.parent_id || 'main') === parentId);
-                let html = "";
-                children.forEach(c => {
-                    html += `
-                        <div class="comment-wrapper">
-                            <div class="comment-meta">ANONYMOUS</div>
-                            <div class="comment-text">${c.content}</div>
-                            <button class="reply-btn" onclick="toggleReply('${c.id}')">Reply</button>
-                            <div id="box-${c.id}" class="inline-reply">
-                                <textarea id="input-${c.id}" placeholder="Reply to this..."></textarea>
-                                <button class="submit-btn" onclick="submitComment('${c.id}')">Post</button>
-                            </div>
-                            <div class="nested-container">${build(c.id)}</div>
-                        </div>`;
-                });
-                return html;
-            }
-            container.innerHTML = build('main') || `<p style="color:var(--text-dim); font-size:13px; text-align:center; margin-top:40px;">No conversation yet.</p>`;
-        }
-
-        async function submitComment(pId) {
-            const el = document.getElementById(pId === 'main' ? 'rootInput' : `input-${pId}`);
-            const val = el.value.trim();
-            if (!val || !auth.currentUser) return;
-
-            await db.collection("intel_posts").doc(postId).collection("comments").add({
-                content: val, parent_id: pId, alias: "ANONYMOUS", timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            await db.collection("intel_posts").doc(postId).update({ comment_count: firebase.firestore.FieldValue.increment(1) });
-            el.value = "";
-            if (pId !== 'main') toggleReply(pId);
-        }
-
-        function toggleReply(id) {
-            document.getElementById(`box-${id}`).classList.toggle('active');
-        }
-
-        auth.onAuthStateChanged(u => { if(u){ loadPost(); initComments(); } });
-    </script>
-</body>
-</html>
-=======
-        // LOAD COMMENTS
-        function loadComments() {
-            db.collection("intel_posts").doc(postId).collection("comments")
-              .orderBy("timestamp", "asc")
-              .onSnapshot(snap => {
-                  const list = document.getElementById('comments-list');
-                  list.innerHTML = "";
-                  if(snap.empty) {
-                      list.innerHTML = `<p style="color: var(--text-dim); font-size: 13px;">No one has spoken yet. Be the first.</p>`;
-                  }
-                  snap.forEach(c => {
-                      const d = c.data();
-                      list.innerHTML += `
-                        <div class="comment-item">
-                            <div class="comment-meta">ANONYMOUS</div>
-                            <div class="comment-text">${d.content}</div>
-                        </div>`;
-                  });
-              });
-        }
-
-        // SUBMIT COMMENT
-        async function submitComment() {
-            const input = document.getElementById('replyInput');
-            const content = input.value.trim();
-            if (!content || !auth.currentUser) return;
-
-            await db.collection("intel_posts").doc(postId).collection("comments").add({
-                content: content,
-                alias: "ANONYMOUS",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            await db.collection("intel_posts").doc(postId).update({
-                comment_count: firebase.firestore.FieldValue.increment(1)
-            });
-
-            input.value = "";
-        }
-
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                loadPost();
-                loadComments();
-            } else {
-                window.location.href = `university.html?uni=${uniId}`;
-            }
+        let html = "";
+        children.forEach(c => {
+            html += `
+                <div class="comment-wrapper">
+                    <div class="comment-meta">${c.alias || "ANONYMOUS"}</div>
+                    <div class="comment-text">${c.content}</div>
+                    <div>
+                        <button class="reply-btn" onclick="toggleReply('${c.id}')">Reply</button>
+                        <button class="upvote-btn" onclick="submitUpvote('${c.id}', this)">▲ ${c.upvotes || 0}</button>
+                    </div>
+                    <div id="box-${c.id}" class="inline-reply">
+                        <textarea id="input-${c.id}" placeholder="Reply to this..."></textarea>
+                        <button class="submit-btn" onclick="submitComment('${c.id}')">Post</button>
+                    </div>
+                    <div class="nested-container">${build(c.id)}</div>
+                </div>
+            `;
         });
-    </script>
+        return html;
+    }
+
+    container.innerHTML = build('main') || `<p style="color:var(--text-dim); font-size:13px; text-align:center; margin-top:40px;">No conversation yet.</p>`;
+}
+
+async function submitComment(pId) {
+    const el = document.getElementById(pId === 'main' ? 'rootInput' : `input-${pId}`);
+    const val = el.value.trim();
+    if (!val || !auth.currentUser) return;
+
+    await db.collection("intel_posts").doc(postId)
+        .collection("comments").add({
+            content: val, parent_id: pId, alias: "ANONYMOUS", timestamp: firebase.firestore.FieldValue.serverTimestamp(), upvotes: 0
+        });
+
+    await db.collection("intel_posts").doc(postId)
+        .update({ comment_count: firebase.firestore.FieldValue.increment(1) });
+    
+    el.value = "";
+    if (pId !== 'main') toggleReply(pId);
+}
+
+function toggleReply(id) {
+    document.getElementById(`box-${id}`).classList.toggle('active');
+}
+
+async function submitUpvote(commentId, btn) {
+    btn.classList.add('upvote-animate');
+    setTimeout(() => btn.classList.remove('upvote-animate'), 300);
+    await db.collection("intel_posts").doc(postId).collection("comments")
+        .doc(commentId).update({ upvotes: firebase.firestore.FieldValue.increment(1) });
+}
+
+auth.onAuthStateChanged(u => { 
+    if(u){ 
+        loadPost(); 
+        initComments(); 
+    } 
+});
+</script>
 </body>
 </html>
->>>>>>> 7957529512e5d0bf4b6cbc0e021469c83042b0b6

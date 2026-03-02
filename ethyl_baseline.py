@@ -3,6 +3,7 @@ from firebase_admin import credentials, firestore
 
 # 1. SETUP
 # Make sure your serviceAccountKey.json is in the same directory!
+# REMINDER: Do not commit this JSON file to GitHub!
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
@@ -11,7 +12,6 @@ def import_osu_venue(venue_name, doc_id, display_rank=0.5):
     print(f"🚀 Importing {venue_name} into Ohio State Campus Intelligence...")
 
     # 2. GENERATE FLAT ZERO BASELINES
-    # Ensures every 30-minute block across 7 days is initialized to 0
     days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     baselines = {}
     for day in days:
@@ -33,9 +33,7 @@ def import_osu_venue(venue_name, doc_id, display_rank=0.5):
 
     # 4. EXECUTE THE UPLOAD
     try:
-        # Path: universities -> ohio-state -> food-joints -> [doc_id]
-        # Note: If Ugly Tuna is technically a "bar" vs "food", 
-        # make sure your frontend points to this 'food-joints' collection.
+        # Targeting the 'bars' collection to fit your new single-column UI
         doc_ref = db.collection("universities").document("ohio-state").collection("bars").document(doc_id)
         
         doc_ref.set(data)
@@ -45,9 +43,12 @@ def import_osu_venue(venue_name, doc_id, display_rank=0.5):
         print(f"❌ ERROR: Failed to import venue: {e}")
 
 if __name__ == "__main__":
+    # --- OSU IMPORT LIST ---
+
     # Import Mike's Late Night Slice
-   
+    # Rank set to 4.0 to sit near the top spots
+    import_osu_venue("Mike's Late Night Slice", "mikes-late-night-slice", display_rank=4.0)
 
     # Import Ugly Tuna 2
-    # Set to 0.7 to place it prominently in the list
+    # Set to 4.5 to keep it at the top of the feed
     import_osu_venue("Ugly Tuna 2", "ugly-tuna-2", display_rank=4.5)

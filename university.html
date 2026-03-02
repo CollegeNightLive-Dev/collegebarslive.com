@@ -870,7 +870,7 @@
     <div id="wait-times" class="tab-content active">
         <div class="dashboard-container">
             <section class="column"><div class="column-header"><h2>Local Bars Live</h2></div><div id="bars-list"></div></section>
-            <section class="column"><div class="column-header"><h2>Local Food Joints Live</h2></div><div id="food-list"></div></section>
+    
         </div>
     </div>
 
@@ -948,7 +948,7 @@
         const functions = firebase.functions();
         const urlParams = new URLSearchParams(window.location.search);
         const uniId = urlParams.get('uni') || 'ohio-state';
-        const admins = ["srikar@collegenightlive.com", "jackson@collegenightlive.com", "srikarkonda2@gmail.com"];
+        const admins = ["srikar@collegenightlive.com", "jackson@collegenightlive.com", "srikarkonda2@gmail.com","jacksonstevenson926@gmail.com"];
 
         let activeCircleId = null;
         let circleUnsubscribe = null;
@@ -1295,14 +1295,7 @@ function startRealTimeSync() {
       }, (error) => console.error("Bar Sync Error:", error));
 
     // 2. LISTEN FOR FOOD UPDATES
-    db.collection("universities").doc(uniId).collection("food-joints")
-      .orderBy("display_order", "asc")
-      .onSnapshot((snapshot) => {
-          currentFood = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          renderCurrentLists();
-          console.log("Real-time Update: Food synced.");
-      }, (error) => console.error("Food Sync Error:", error));
-
+    
     // 3. LISTEN FOR LIVE INTEL FEED
     db.collection("intel_posts")
       .where("university_id", "==", uniId)

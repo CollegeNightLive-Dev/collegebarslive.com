@@ -1109,6 +1109,7 @@
         async function submitIntel() {
             const content = document.getElementById('intelInput').value.trim();
             if (!content || !auth.currentUser) return;
+<<<<<<< HEAD
 
             const userRef = db.collection("users").doc(auth.currentUser.uid).collection("private").doc("last_post");
 
@@ -1138,6 +1139,22 @@
                 }
                 console.error(error);
             }
+=======
+            const expiryDate = new Date(Date.now() + (8 * 60 * 60 * 1000));
+            await db.collection("intel_posts").add({
+                university_id: uniId,
+                content: content,
+                user_id: auth.currentUser.uid, 
+                alias: "ANONYMOUS", 
+                upvotes: 1,
+                flags: 0,
+                comment_count: 0,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                deleteAt: firebase.firestore.Timestamp.fromDate(expiryDate)
+            });
+            document.getElementById('intelInput').value = "";
+            await fetchIntelFeed(); // Optimistic refresh after posting
+>>>>>>> e6cd94f4e10dd10ba19da8a957f275fd3492edf7
         }
 
         async function votePost(docId, change, event) {

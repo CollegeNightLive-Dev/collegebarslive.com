@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "college-bars-live"
-  }
+  },
+  "targets": {
+    "college-bars-live": {
+      "hosting": {
+        "main": [
+          "college-bars-live"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

@@ -1,11 +1,24 @@
 // College Night Live - Main Application Brain
 // Handles: Auth Listeners, Vouch Cooldowns, and UI States
 
+// --- 1. ADD THESE TWO IMPORTS AT THE TOP ---
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
+import { getApp } from "firebase/app"; 
+
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, updateDoc, increment } from "firebase/firestore";
 
+// --- 2. ADD THIS INITIALIZATION BLOCK RIGHT HERE ---
+const app = getApp(); // This grabs your already initialized Firebase app
+const appCheck = initializeAppCheck(app, {
+  provider: new ReCaptchaEnterpriseProvider('6Lf7E38sAAAAAK7MUJUtKneKqKuoUEgukfClJrt8'),
+  isTokenAutoRefreshEnabled: true
+});
+
+// Your existing variables continue here...
 const auth = getAuth();
 const db = getFirestore();
+
 
 /**
  * 1. THE AUTH OBSERVER (Kills the "Ghost Login" button)

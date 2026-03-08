@@ -213,7 +213,6 @@
         <div class="tab-links-container">
             <div onclick="switchView('home')" id="nav-home" class="tab-link active">Home</div>
             <a id="link-wait-times" href="university.html?uni=ohio-state&tab=wait-times" class="tab-link">Wait Times</a>
-            <a id="link-live-feed" href="university.html?uni=ohio-state&tab=live-feed" class="tab-link">Live Feed</a>
             <a id="link-safety" href="university.html?uni=ohio-state&tab=safety" class="tab-link">Safety</a>
             <div onclick="switchView('partner')" id="nav-partner" class="tab-link">Partner With Us</div>
         </div>
@@ -288,11 +287,9 @@
             
             if (id) {
                 const waitLink = document.getElementById('link-wait-times');
-                const feedLink = document.getElementById('link-live-feed');
                 const safetyLink = document.getElementById('link-safety');
                 
                 if(waitLink) waitLink.href = `university.html?uni=${id}&tab=wait-times`;
-                if(feedLink) feedLink.href = `university.html?uni=${id}&tab=live-feed`;
                 if(safetyLink) safetyLink.href = `university.html?uni=${id}&tab=safety`;
             }
         }

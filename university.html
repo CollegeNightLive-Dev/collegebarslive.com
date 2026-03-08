@@ -8,7 +8,7 @@
     <link rel="apple-touch-icon" href="icon.png">
     <meta name='impact-site-verification' value='e2283d38-22b0-4195-8e5c-876111b88e82'>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Intel Feed </title>
     <style>
         :root {
@@ -54,7 +54,7 @@
         }
         @keyframes fadeIn { 
             from { opacity: 0; transform: translateY(8px); } 
-            to { opacity: 1; transform: translateY(0); } 
+            to { opacity: 1; } 
         }
 
         /* --- THE VISUAL BOUNCER STYLES --- */
@@ -216,9 +216,22 @@
             align-items: center; 
         }
 
+        #safety.tab-content.active {
+            flex: 1;
+            justify-content: center;
+            overflow: hidden;
+            padding: 20px 16px max(20px, env(safe-area-inset-bottom, 20px)) 16px;
+            box-sizing: border-box;
+        }
+
+        #safety .dashboard-container {
+            flex: 0 0 auto;
+            padding: 0 16px;
+        }
+
         header { 
             text-align: center; 
-            padding: 60px 32px 30px; 
+            padding: 28px 32px 16px; 
         }
 
         .header-title-wrapper { 
@@ -359,14 +372,6 @@
             font-weight: 500; 
         }
 
-        .photo-trigger {
-            font-size: 14px;
-            cursor: pointer;
-            opacity: 0.5;
-            transition: 0.3s;
-        }
-        .photo-trigger:hover { opacity: 1; }
-
         .wait-time-text { 
             font-size: 14px; 
             font-weight: 600; 
@@ -393,26 +398,109 @@
             flex-wrap: wrap; 
         }
 
-        .affiliate-link-btn, .deals-btn { 
-            background: transparent; 
-            color: var(--text-main); 
-            border: 1px solid var(--vouch-border); 
-            padding: 4px 10px; 
-            border-radius: 6px; 
-            font-size: 9px; 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            cursor: pointer; 
-            text-decoration: none; 
-            transition: 0.2s; 
-            white-space: nowrap; 
+        @keyframes fadeInRow {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        .row-item { animation: fadeInRow 0.25s ease; }
+
+        /* SQUAD CIRCLE TOAST — 3 s loop
+           ViewBox 0 0 200 200
+           L=60 · C=100 · R=140 — 40 px gaps = shoulder-to-shoulder
+           Clink point (100, 26)
+           0–33% clink · 33–83% unified gulp · 83–100% reset */
+
+        @keyframes arm-L {
+            0%        { transform: rotate(0deg); }
+            12%       { transform: rotate(10deg); }
+            28%, 33%  { transform: rotate(-55deg); }
+            38%, 76%  { transform: rotate(-68deg); }
+            46%       { transform: rotate(-72deg); }
+            54%       { transform: rotate(-68deg); }
+            62%       { transform: rotate(-72deg); }
+            70%       { transform: rotate(-68deg); }
+            86%       { transform: rotate(-18deg); }
+            100%      { transform: rotate(0deg); }
+        }
+        @keyframes arm-R {
+            0%        { transform: rotate(0deg); }
+            12%       { transform: rotate(-10deg); }
+            28%, 33%  { transform: rotate(55deg); }
+            38%, 76%  { transform: rotate(68deg); }
+            46%       { transform: rotate(72deg); }
+            54%       { transform: rotate(68deg); }
+            62%       { transform: rotate(72deg); }
+            70%       { transform: rotate(68deg); }
+            86%       { transform: rotate(18deg); }
+            100%      { transform: rotate(0deg); }
+        }
+        @keyframes arm-C {
+            0%        { transform: rotate(0deg); }
+            12%       { transform: rotate(6deg); }
+            28%, 33%  { transform: rotate(-38deg); }
+            38%, 76%  { transform: rotate(-52deg); }
+            46%       { transform: rotate(-56deg); }
+            54%       { transform: rotate(-52deg); }
+            62%       { transform: rotate(-56deg); }
+            70%       { transform: rotate(-52deg); }
+            86%       { transform: rotate(-12deg); }
+            100%      { transform: rotate(0deg); }
+        }
+        @keyframes head-squad {
+            0%, 28%   { transform: rotate(0deg); }
+            15%       { transform: rotate(-4deg); }
+            36%, 74%  { transform: rotate(45deg); }
+            46%       { transform: rotate(48deg); }
+            54%       { transform: rotate(45deg); }
+            62%       { transform: rotate(48deg); }
+            70%       { transform: rotate(45deg); }
+            84%       { transform: rotate(10deg); }
+            92%       { transform: rotate(-3deg); }
+            100%      { transform: rotate(0deg); }
+        }
+        @keyframes clink-splash {
+            0%, 26%   { opacity: 0; transform: translate(0,0) scale(0); }
+            34%       { opacity: 1; transform: translate(var(--cx), var(--cy)) scale(1.5); }
+            50%       { opacity: 0; transform: translate(calc(var(--cx)*2.2), calc(var(--cy)*2.2)) scale(0.2); }
+            100%      { opacity: 0; }
+        }
+        @keyframes spark-pop {
+            0%, 26%   { opacity: 0; transform: scale(0.3); }
+            33%       { opacity: 1; transform: scale(1); }
+            46%       { opacity: 0; transform: scale(1.6); }
+            100%      { opacity: 0; }
+        }
+        @keyframes scene-sway {
+            0%, 100%  { transform: rotate(-2deg); }
+            50%       { transform: rotate(2deg); }
         }
 
-        .deals-btn { 
-            border-color: var(--vouch-border); 
-            color: var(--text-main); 
+        #stickman-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 44px 0 36px;
+            width: 100%;
         }
-        
+        .toast-scene {
+            overflow: visible;
+            animation: scene-sway 3s ease-in-out infinite;
+            transform-origin: 100px 200px;
+        }
+        .arm-grp-L { animation: arm-L 3s ease-in-out infinite; }
+        .arm-grp-R { animation: arm-R 3s ease-in-out infinite; }
+        .arm-grp-C { animation: arm-C 3s ease-in-out infinite; }
+        .head-grp  { animation: head-squad 3s ease-in-out infinite; }
+        .clink-dot { animation: clink-splash 3s ease-out infinite; }
+        .clink-dot:nth-child(1) { --cx: -12px; --cy: -12px; animation-delay: 0s;    }
+        .clink-dot:nth-child(2) { --cx:   5px; --cy: -15px; animation-delay: 0.06s; }
+        .clink-dot:nth-child(3) { --cx:  14px; --cy:  -8px; animation-delay: 0.12s; }
+        .clink-dot:nth-child(4) { --cx:  -5px; --cy: -17px; animation-delay: 0.18s; }
+        .spark-fx {
+            animation: spark-pop 3s ease-out infinite;
+            transform-origin: 100px 26px;
+        }
+
         .intel-options { 
             display: flex; 
             gap: 8px; 
@@ -502,215 +590,21 @@
             width: 100%; 
         }
 
-        /* PHOTO MODAL SPECIFIC */
-        .photo-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 10000; padding: 20px; box-sizing: border-box; }
-        .photo-modal-card { width: 100%; max-width: 400px; text-align: center; }
-        #line-photo-img { width: 100%; border-radius: 12px; border: 1px solid var(--border-gray); margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        .modal-timestamp { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 20px; display: block; letter-spacing: 1px; }
-
-        /* LIVE FEED */
-        .reddit-container { 
-            width: 100%; 
-            max-width: 500px; 
-            padding: 0 20px 100px; 
-            box-sizing: border-box; 
-        }
-        
-        .post-input-wrapper {
-            background: rgba(28, 28, 30, 0.7);
-            backdrop-filter: blur(20px);
-            border-radius: 18px;
-            padding: 16px;
-            margin-bottom: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        }
-
-        .post-input-wrapper textarea {
-            width: 100%; 
-            background: transparent; 
-            border: none; 
-            color: #fff;
-            resize: none; 
-            outline: none; 
-            font-size: 15px; 
-            min-height: 50px;
-            font-family: inherit; 
-            font-weight: 400;
-        }
-
-        .post-actions { 
-            display: flex; 
-            justify-content: flex-end; 
-            margin-top: 12px; 
-        }
-
-        .post-btn {
-            background: var(--accent-color); 
-            color: #000;
-            font-weight: 700; 
-            border: none; 
-            padding: 8px 18px;
-            border-radius: 20px; 
-            font-size: 12px; 
-            cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .post-btn:active { 
-            transform: scale(0.96); 
-        }
-
-        .intel-card {
-            background: var(--intel-card);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex; 
-            flex-direction: column;
-            transition: all 0.3s ease;
-            cursor: pointer; /* CARD IS NOW CLICKABLE */
-        }
-
-        .intel-card:hover {
-            background: rgba(44, 44, 46, 0.6);
-            border-color: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .card-main { 
-            display: flex; 
-            gap: 16px; 
-            width: 100%; 
-        }
-        
-        .vote-sidebar {
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
-            gap: 4px; 
-            min-width: 34px; 
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px; 
-            padding: 6px 0; 
-            height: fit-content;
-        }
-
-        .vote-btn {
-            background: none; 
-            border: none; 
-            color: var(--text-dim);
-            font-size: 14px; 
-            cursor: pointer; 
-            transition: 0.2s;
-            padding: 4px; 
-            line-height: 1;
-        }
-
-        .vote-btn:hover { 
-            color: var(--accent-color); 
-        }
-
-        .vote-count { 
-            font-size: 12px; 
-            font-weight: 700; 
-            color: var(--text-main); 
-        }
-        
-        .intel-content { 
-            flex: 1; 
-        }
-
-        .intel-meta {
-            font-size: 11px; 
-            color: var(--text-dim);
-            text-transform: none; 
-            margin-bottom: 6px;
-            letter-spacing: -0.2px; 
-            display: flex; 
-            align-items: center; 
-            gap: 6px;
-            font-weight: 500;
-        }
-
-        .intel-meta strong { 
-            color: var(--text-main); 
-            font-weight: 600; 
-        }
-
-        .timestamp-tag { 
-            color: var(--footer-text); 
-            font-weight: 500; 
-            font-size: 11px; 
-        }
-        
-        .intel-text {
-            font-size: 16px; 
-            line-height: 1.5; 
-            margin-bottom: 16px;
-            color: rgba(255,255,255,0.95); 
-            font-weight: 400;
-            letter-spacing: -0.1px;
-        }
-        
-        .intel-actions {
-            display: flex; 
-            justify-content: flex-start; 
-            align-items: center;
-            gap: 20px; 
-            border-top: 1px solid rgba(255,255,255,0.05); 
-            padding-top: 12px;
-        }
-
-        .reply-trigger, .flag-btn {
-            background: transparent; 
-            border: none; 
-            color: var(--text-dim);
-            font-size: 11px; 
-            font-weight: 600; 
-            text-transform: none;
-            cursor: pointer; 
-            padding: 0; 
-            transition: 0.2s;
-        }
-
-        .reply-trigger:hover { 
-            color: var(--text-main); 
-        }
-
-        .flag-btn:hover { 
-            color: var(--flag-red); 
-        }
-
-        .view-more-posts-btn {
-            width: 100%; 
-            padding: 16px; 
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 18px;
-            color: var(--text-main); 
-            font-weight: 700; 
-            text-transform: none;
-            font-size: 13px; 
-            cursor: pointer; 
-            margin-top: 24px; 
-            transition: 0.2s;
-        }
-
-        .view-more-posts-btn:hover { 
-            background: rgba(255,255,255,0.1); 
-        }
-
         /* Beacon UI Styles */
         .beacon-grid { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
-            gap: 15px; 
+            gap: 12px; 
             width: 100%; 
-            max-width: 400px; 
-            margin: 25px auto 0; 
+            max-width: 360px; 
+            margin: 16px auto 0; 
+        }
+
+        @media (max-height: 700px) {
+            .beacon-btn { padding: 10px; border-radius: 12px; }
+            .tier-icon  { font-size: 20px; }
+            .beacon-label { font-size: 10px; margin-top: 6px; }
+            .beacon-grid { gap: 10px; max-width: 300px; margin-top: 12px; }
         }
 
         .beacon-btn {
@@ -776,6 +670,8 @@
         .footer a:hover { 
             color: var(--text-main); 
         }
+
+        body.safety-active .footer { display: none; }
         
         @media (max-width: 600px) {
             .user-nav-container { 
@@ -813,25 +709,6 @@
         </div>
     </div>
 
-    <div id="photo-modal" class="photo-modal-overlay" onclick="closePhotoModal()">
-        <div class="photo-modal-card" onclick="event.stopPropagation()">
-            <h3 id="photo-venue-title" style="font-size:12px; letter-spacing:2px; margin-bottom:15px; text-transform:uppercase;">LIVE LINE INTEL</h3>
-            <img id="line-photo-img" src="" alt="Line Intel">
-            <span id="photo-time-label" class="modal-timestamp"></span>
-            <button class="logout-btn" style="width:100%; padding:12px;" onclick="closePhotoModal()">BACK TO PAGE</button>
-        </div>
-    </div>
-
-    <input type="file" id="cameraInput" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
-
-    <div id="deals-modal" class="modal-overlay" onclick="closeDeals()">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <h3 id="modal-venue-name">VENUE DEALS</h3>
-            <p id="modal-deal-text">Loading special intel...</p>
-            <button class="close-modal" onclick="closeDeals()">Back to Feed</button>
-        </div>
-    </div>
-
     <div id="login-overlay" style="display: none;">
         <button class="login-btn" onclick="loginWithGoogle()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Continue with Google
@@ -858,7 +735,6 @@
     <nav class="tab-nav">
         <a href="index.html" class="tab-link">Home</a>
         <div class="tab-link active" onclick="switchTab('wait-times')">Wait Times</div>
-        <div class="tab-link" onclick="switchTab('live-feed')">Live Feed </div>
         <div class="tab-link" onclick="switchTab('safety')">Safety</div>
     </nav>
 
@@ -869,29 +745,96 @@
 
     <div id="wait-times" class="tab-content active">
         <div class="dashboard-container">
-            <section class="column"><div class="column-header"><h2>Local Bars Live</h2></div><div id="bars-list"></div></section>
+            <section class="column"><div class="column-header"><h2>Local Bars Live</h2></div><div id="bars-list">
+                <div id="stickman-loader">
+                  <svg class="toast-scene" viewBox="0 0 200 200" width="240" height="240"
+                       stroke="white" stroke-linecap="round" stroke-linejoin="round" fill="none">
+
+                    <!-- ═══ LEFT (cx=60) ═══ -->
+                    <line x1="60" y1="65" x2="61" y2="105" stroke-width="3"/>
+                    <line x1="60" y1="83" x2="38" y2="103" stroke-width="3"/>
+                    <path d="M61,105 L46,168 Q44,174 38,172" stroke-width="3"/>
+                    <path d="M61,105 L76,168 Q78,174 82,172" stroke-width="3"/>
+
+                    <g class="arm-grp-L" style="transform-origin:60px 83px">
+                      <line x1="60" y1="83" x2="78" y2="63" stroke-width="3"/>
+                      <path d="M74,49 L86,50 L84,63 L76,62 Z" stroke-width="2" fill="rgba(245,197,24,0.3)"/>
+                      <line x1="77" y1="59" x2="83" y2="59" stroke-width="1.5" stroke="#f5c518"/>
+                    </g>
+
+                    <g class="head-grp" style="transform-origin:60px 65px">
+                      <circle cx="60" cy="48" r="17" stroke-width="3" fill="black"/>
+                      <circle cx="54" cy="45" r="2.2" fill="white" stroke="none"/>
+                      <circle cx="66" cy="45" r="2.2" fill="white" stroke="none"/>
+                      <path d="M53,54 Q60,60 67,55" stroke-width="2.5" stroke="white"/>
+                    </g>
+
+
+                    <!-- ═══ RIGHT (cx=140) ═══ -->
+                    <line x1="140" y1="62" x2="139" y2="104" stroke-width="3"/>
+                    <line x1="140" y1="80" x2="162" y2="100" stroke-width="3"/>
+                    <path d="M139,104 L124,166 Q122,172 116,170" stroke-width="3"/>
+                    <path d="M139,104 L154,166 Q156,172 162,170" stroke-width="3"/>
+
+                    <g class="arm-grp-R" style="transform-origin:140px 80px">
+                      <line x1="140" y1="80" x2="120" y2="60" stroke-width="3"/>
+                      <path d="M114,46 L126,47 L124,60 L116,59 Z" stroke-width="2" fill="rgba(245,197,24,0.3)"/>
+                      <line x1="117" y1="56" x2="123" y2="56" stroke-width="1.5" stroke="#f5c518"/>
+                    </g>
+
+                    <g class="head-grp" style="transform-origin:140px 62px">
+                      <circle cx="140" cy="46" r="16" stroke-width="3" fill="black"/>
+                      <circle cx="134" cy="43" r="2.2" fill="white" stroke="none"/>
+                      <circle cx="146" cy="43" r="2.2" fill="white" stroke="none"/>
+                      <path d="M133,52 Q140,58 147,53" stroke-width="2.5" stroke="white"/>
+                    </g>
+
+
+                    <!-- ═══ CENTER (cx=100, drawn last = on top) ═══ -->
+                    <line x1="100" y1="58" x2="100" y2="106" stroke-width="3"/>
+                    <line x1="100" y1="76" x2="78" y2="98" stroke-width="3"/>
+                    <path d="M100,106 L83,172 Q81,178 75,176" stroke-width="3"/>
+                    <path d="M100,106 L117,172 Q119,178 125,176" stroke-width="3"/>
+
+                    <g class="arm-grp-C" style="transform-origin:100px 76px">
+                      <line x1="100" y1="76" x2="120" y2="54" stroke-width="3"/>
+                      <path d="M116,40 L128,41 L126,54 L118,53 Z" stroke-width="2" fill="rgba(245,197,24,0.3)"/>
+                      <line x1="119" y1="50" x2="125" y2="50" stroke-width="1.5" stroke="#f5c518"/>
+                    </g>
+
+                    <g class="head-grp" style="transform-origin:100px 58px">
+                      <circle cx="100" cy="38" r="20" stroke-width="3" fill="black"/>
+                      <circle cx="93" cy="35" r="2.5" fill="white" stroke="none"/>
+                      <circle cx="107" cy="35" r="2.5" fill="white" stroke="none"/>
+                      <path d="M91,46 Q100,56 109,46" stroke-width="2.5" stroke="white"/>
+                    </g>
+
+
+                    <!-- ═══ CLINK FX at (100,26) ═══ -->
+                    <g class="spark-fx">
+                      <line x1="100" y1="26" x2="100" y2="12" stroke="#f5c518" stroke-width="2"/>
+                      <line x1="100" y1="26" x2="88"  y2="16" stroke="#f5c518" stroke-width="1.5"/>
+                      <line x1="100" y1="26" x2="112" y2="16" stroke="#f5c518" stroke-width="1.5"/>
+                      <line x1="100" y1="26" x2="86"  y2="28" stroke="#f5c518" stroke-width="1.5"/>
+                      <line x1="100" y1="26" x2="114" y2="28" stroke="#f5c518" stroke-width="1.5"/>
+                    </g>
+                    <circle class="clink-dot" cx="100" cy="26" r="3" fill="#f5c518" stroke="none"/>
+                    <circle class="clink-dot" cx="100" cy="26" r="3" fill="#f5c518" stroke="none"/>
+                    <circle class="clink-dot" cx="100" cy="26" r="3" fill="#f5c518" stroke="none"/>
+                    <circle class="clink-dot" cx="100" cy="26" r="3" fill="#f5c518" stroke="none"/>
+
+                  </svg>
+                </div>
+            </div></section>
     
         </div>
     </div>
 
-    <div id="live-feed" class="tab-content">
-        <div class="reddit-container">
-            <div class="post-input-wrapper">
-                <textarea id="intelInput" placeholder="Alert your campus of undercovers, strict bouncers, ect" onkeydown="handleMainPostKey(event)"></textarea>
-                <div class="post-actions"><button class="post-btn" onclick="submitIntel()">Post Intel</button></div>
-            </div>
-            <div id="intel-feed"></div>
-            <button id="view-more-posts" class="view-more-posts-btn" style="display: none;" onclick="loadMorePosts()">Load More Intel</button>
-        </div>
-    </div>  
 
     <div id="safety" class="tab-content">
-        <div class="dashboard-container" style="text-align: center; justify-content: center; padding-top: 60px;">
+        <div class="dashboard-container" style="text-align: center; justify-content: center;">
             <div style="background: var(--intel-card); border: 1px solid var(--border-gray); border-radius: 16px; padding: 24px; max-width: 500px; margin: 0 auto; width: 100%;">
-                <p style="color: var(--accent-color); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; font-size: 12px;">Personal Intelligence Beacons</p>
-                <p style="font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 20px;">
-                    Your friends are your first responders. We're launching a system that allows you to alert your friend group for situations that don't always feel like emergencies but deserve some notice.
-                </p>
+                <p style="color: var(--accent-color); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; font-size: 12px;">Personal Intelligence Beacons</p>
                 <div class="beacon-grid">
                     <div class="beacon-btn" style="border-bottom: 3px solid var(--tier-blue);">
                         <span class="coming-soon-tag">Coming Soon</span>
@@ -960,8 +903,6 @@
 
         let activeCircleId = null;
         let circleUnsubscribe = null;
-        let currentVenueForPhoto = null;
-        let currentColForPhoto = null;
 
         function setSchoolTheme(id) {
             const themes = { 'ohio-state': '#ba0c2f', 'miami-oh': '#c41230', 'cincinnati': '#e00122', 'purdue': '#ceb888', 'ohio-university': '#2e4d30' };
@@ -973,7 +914,6 @@
         setSchoolTheme(uniId);
 
         let currentBars = [], currentFood = [], lastUpdatedVenueId = null;
-        let postLimit = 15;
 
         // --- NEW WAY: POLLING FUNCTION ---
         
@@ -1036,17 +976,6 @@
             return final >= 60 ? "60+" : `${final}-${final + 5}`;
         }
 
-        function openDeals(venueName, encodedDeal) {
-            document.getElementById('modal-venue-name').innerText = venueName.toUpperCase();
-            const dealText = encodedDeal ? decodeURIComponent(encodedDeal) : "No active special deals right now.";
-            document.getElementById('modal-deal-text').innerText = dealText;
-            document.getElementById('deals-modal').style.display = 'flex';
-        }
-
-        function closeDeals() { 
-            document.getElementById('deals-modal').style.display = 'none'; 
-        }
-
         function updateHeader(tabId) {
             const rawName = uniId.replace(/-/g, ' ').toUpperCase();
             const titleEl = document.getElementById('dynamic-uni-title');
@@ -1067,17 +996,7 @@
             const links = document.querySelectorAll('.tab-link');
             links.forEach(l => { if(l.getAttribute('onclick') === `switchTab('${tabId}')`) l.classList.add('active'); });
             updateHeader(tabId);
-        }
-
-        function formatTimeAgo(timestamp) {
-            if (!timestamp) return "now";
-            const date = (typeof timestamp.toDate === 'function') ? timestamp.toDate() : new Date(timestamp);
-            const seconds = Math.floor((new Date() - date) / 1000);
-            if (seconds < 60) return "now";
-            let interval = seconds / 3600;
-            if (interval > 1) return Math.floor(interval) + "h";
-            interval = seconds / 60;
-            return Math.floor(interval) + "m";
+            document.body.classList.toggle('safety-active', tabId === 'safety');
         }
 
         auth.onAuthStateChanged(async (user) => {
@@ -1097,7 +1016,6 @@
                 if (userNav) userNav.style.display = 'flex';
                 document.getElementById('user-display-name').innerText = user.displayName.toUpperCase();
                 document.getElementById('school-selector').value = uniId;
-                initFeedListener();
             } else {
                 document.body.classList.add('logged-out');
                 if (loginOverlay) loginOverlay.style.display = 'flex';
@@ -1112,112 +1030,6 @@
         }
 
         function changeSchool(newUni) { window.location.href = `university.html?uni=${newUni}`; }
-        function handleMainPostKey(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitIntel(); } }
-
-        async function submitIntel() {
-            const content = document.getElementById('intelInput').value.trim();
-            if (!content || !auth.currentUser) return;
-
-            const userRef = db.collection("users").doc(auth.currentUser.uid).collection("private").doc("last_post");
-
-            try {
-        // 1. Post the Intel
-                await db.collection("intel_posts").add({
-                    university_id: uniId,
-                    content: content,
-                    user_id: auth.currentUser.uid, 
-                    alias: "ANONYMOUS", 
-                    upvotes: 1,
-                    flags: 0,
-                    comment_count: 0,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    deleteAt: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + (8 * 60 * 60 * 1000)))
-                });
-
-        // 2. Update the Rate Limit Tracker (This enables the 3s cooldown)
-                await userRef.set({
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                document.getElementById('intelInput').value = "";
-            } catch (error) {
-                if (error.code === 'permission-denied') {
-                    alert("Slow Down! This might be annoying but we have it right now to prevent bots. We will continue refining so user experience is improved while still maintaining protection against spam.");
-                }
-                console.error(error);
-            }
-        }
-
-        async function votePost(docId, change, event) {
-            if(!auth.currentUser) return;
-            if (event) event.stopPropagation();
-            const voteKey = `voted_${docId}`;
-            if(localStorage.getItem(voteKey)) return; 
-
-            localStorage.setItem(voteKey, 'true'); 
-            
-            // Optimistic UI Update
-            const countEl = document.getElementById(`vote-count-${docId}`);
-            if(countEl) countEl.innerText = parseInt(countEl.innerText) + change;
-
-            await db.collection("intel_posts").doc(docId).update({
-                upvotes: firebase.firestore.FieldValue.increment(change)
-            });
-        }
-
-        async function flagPost(docId, event) { 
-            if (event) event.stopPropagation();
-            if(!confirm("Flag post?")) return; 
-            await db.collection("intel_posts").doc(docId).update({ flags: firebase.firestore.FieldValue.increment(1) }); 
-        }
-
-        function openThread(postId) {
-            window.location.href = `post.html?id=${postId}&uni=${uniId}`;
-        }
-
-        function loadMorePosts() { postLimit += 15; fetchIntelFeed(); }
-
-        function initFeedListener() {
-            // Initial manual load
-            fetchIntelFeed();
-        }
-
-        function triggerCamera(col, id) { 
-            currentVenueForPhoto = id; 
-            currentColForPhoto = col; 
-            document.getElementById('cameraInput').click(); 
-        }
-
-        async function handlePhotoUpload(event) {
-            const file = event.target.files[0]; 
-            if (!file || !currentVenueForPhoto) return;
-            const path = `venue_photos/${uniId}/${currentVenueForPhoto}.jpg`;
-            const storageRef = storage.ref().child(path);
-            try {
-                const snapshot = await storageRef.put(file, { cacheControl: 'public,max-age=300' });
-                const url = await snapshot.ref.getDownloadURL();
-                await db.collection("universities").doc(uniId).collection(currentColForPhoto).doc(currentVenueForPhoto).update({
-                    line_photo_url: url,
-                    line_photo_timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                alert("INTEL VERIFIED");
-                fetchAllData(); 
-            } catch (err) { alert("Verification failed: " + err.message); }
-        }
-
-        function viewPhoto(name, url, ts) {
-            const cacheBuster = url.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
-            document.getElementById('photo-venue-title').innerText = name.toUpperCase();
-            document.getElementById('line-photo-img').src = url + cacheBuster;
-            document.getElementById('photo-time-label').innerText = "TAKEN: " + formatTimeAgo(ts);
-            document.getElementById('photo-modal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closePhotoModal() { 
-            document.getElementById('photo-modal').style.display = 'none'; 
-            document.body.style.overflow = 'auto';
-        }
 
         function renderCurrentLists() { renderList("bars-list", currentBars, false); renderList("food-list", currentFood, true); }
         
@@ -1235,9 +1047,6 @@
                 const minutes = parseInt(waitRange.split('-')[0]) || 0;
                 const closed = (data.ai_reason || "").toLowerCase().includes("closed");
                 const isAdmin = auth.currentUser && admins.includes(auth.currentUser.email);
-                const hasPhoto = data.line_photo_url && data.line_photo_url !== "";
-                let photoIcon = isAdmin ? `<span class="photo-trigger" onclick="triggerCamera('${collectionName}', '${data.id}')">📷</span>` : "";
-                if (hasPhoto) photoIcon += `<span class="photo-trigger" style="margin-left:8px" onclick="viewPhoto('${data.name}', '${data.line_photo_url}', '${data.line_photo_timestamp}')">👁️</span>`;
 
                 let fillWidth = 0; let statusColor = "var(--wait-green)";
                 if (isFood) {
@@ -1253,7 +1062,7 @@
                 
                 const row = document.createElement("div"); row.className = `row-item`;
                 let actionSection = isLocked ? (data.id === vouchedVenueId ? `<div class="vouch-thanks-msg">✅ THANK YOU! <span class="cooldown-timer" id="timer-${data.id}"></span></div>` : "") : `<div class="intel-options">${options.map(t => `<button onclick="reportIntel('${collectionName}', '${data.id}', ${t})">${t}m</button>`).join('')}</div>`;
-                row.innerHTML = `<div class="row-top"><div class="venue-name-group"><div class="venue-name">${data.name}</div>${photoIcon}</div><div class="wait-time-text">${closed ? "CLOSED" : waitRange + "m"}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section"><button class="deals-btn" onclick="openDeals('${data.name.replace(/'/g, "\\'")}', '${data.current_deal || ""}')">Deals</button>${actionSection}</div>`;
+                row.innerHTML = `<div class="row-top"><div class="venue-name-group"><div class="venue-name">${data.name}</div></div><div class="wait-time-text">${closed ? "CLOSED" : waitRange + "m"}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section">${actionSection}</div>`;
                 list.appendChild(row);
                 if (isLocked && data.id === vouchedVenueId) startVisualReset(data.id, parseInt(cooldown));
             });
@@ -1302,62 +1111,16 @@ function startRealTimeSync() {
           console.log("Real-time Update: Bars synced.");
       }, (error) => console.error("Bar Sync Error:", error));
 
-    // 2. LISTEN FOR FOOD UPDATES
-    
-    // 3. LISTEN FOR LIVE INTEL FEED
-    db.collection("intel_posts")
-      .where("university_id", "==", uniId)
-      .orderBy("timestamp", "desc")
-      .limit(postLimit)
-      .onSnapshot((snapshot) => {
-          const feed = document.getElementById('intel-feed');
-          if (!feed) return;
-          
-          let posts = [];
-          snapshot.forEach(doc => {
-              const data = doc.data();
-              if ((data.flags || 0) < 5) posts.push({ id: doc.id, ...data });
-          });
-
-          // Reuse your existing rendering logic but update the UI immediately
-          renderRealTimeFeed(posts);
-          console.log("Real-time Update: Intel Feed synced.");
-      }, (error) => console.error("Feed Sync Error:", error));
 }
 
-// Separate helper for feed rendering to avoid duplication
-    function renderRealTimeFeed(posts) {
-        const feed = document.getElementById('intel-feed');
-        if (!feed) return;
-        feed.innerHTML = "";
-        posts.forEach(data => {
-            const card = document.createElement('div');
-            card.className = 'intel-card';
-            card.onclick = () => openThread(data.id);
-            card.innerHTML = `
-                <div class="card-main">
-                    <div class="vote-sidebar">
-                        <button class="vote-btn" onclick="votePost('${data.id}', 1, event)">▲</button>
-                        <span class="vote-count" id="vote-count-${data.id}">${data.upvotes || 0}</span>
-                        <button class="vote-btn" onclick="votePost('${data.id}', -1, event)">▼</button>
-                    </div>
-                    <div class="intel-content">
-                        <div class="intel-meta"><strong>${data.alias}</strong> • ${formatTimeAgo(data.timestamp)}</div>
-                        <div class="intel-text">${data.content}</div>
-                        <div class="intel-actions">
-                            <button class="reply-trigger">💬 ${data.comment_count || 0} Comments</button>
-                            <button class="flag-btn" onclick="flagPost('${data.id}', event)">Flag</button>
-                        </div>
-                    </div>
-                </div>`;
-            feed.appendChild(card);
-        });
-    }
+
         startRealTimeSync();
 
         updateHeader('wait-times');
 
     
     </script>
+
+
 </body>
 </html>

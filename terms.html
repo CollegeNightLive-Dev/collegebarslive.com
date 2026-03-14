@@ -53,6 +53,8 @@
             padding-bottom: 8px;
         }
 
+        h2:first-of-type { margin-top: 0; }
+
         p, li {
             font-size: 14px;
             color: #a1a1a6;
@@ -69,6 +71,9 @@
 
         strong { color: #fff; }
 
+        a { color: #60a5fa; font-weight: 600; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
         .footer {
             width: 100%;
             text-align: center;
@@ -83,51 +88,70 @@
 <body>
 
     <div class="content">
-        <a href="javascript:history.back()" style="text-decoration: none; color: #666; font-size: 13px;">← BACK</a>
+        <a href="javascript:history.back()" style="color: #666; font-size: 13px;">← BACK</a>
         
         <h1>Terms & Privacy Policy</h1>
-        <p class="last-updated">Last Modified: February 21, 2026</p>
+        <p class="last-updated">Last Modified: March 9, 2026</p>
         
         <h2>1. Privacy Policy & Data Handling</h2>
-        <p>College Night Live ("we," "us," or "our") values your privacy. We use <strong>Google Authentication</strong> to prevent bots and platform abuse.</p>
+        <p>Nyte ("we," "us," or "our") values your privacy. We use <strong>anonymous authentication</strong>—no email or name is required.</p>
         
-        <ul>
-            <li><strong>Information We Collect:</strong> Your name and email address provided via Google Sign-In, and any content you voluntarily post to the Intel Feed.</li>
-            <li><strong>Usage:</strong> We use this data to manage your account and attribute reports. We do not sell or rent user data to third parties.</li>
-            <li><strong>Cookies:</strong> We use essential session cookies through Firebase to keep you logged into the platform.</li>
-        </ul>
+        <p><strong>Information We Collect:</strong><br>
+        We collect (1) bar wait-time submissions you make (the value you select, timestamp, and an anonymous account ID), and (2) map reports you submit (report type, venue location, anonymous ID, and your selected school). We do not collect your name or email.</p>
+
+        <p><strong>Data We Do Not Collect:</strong><br>
+        We do not collect your precise device location, contacts, or calendar.</p>
+
+        <p><strong>How We Use It:</strong><br>
+        We use this data to attribute reports, calculate wait-time estimates, and improve the platform. We do not sell or rent user data to third parties.</p>
+
+        <p><strong>Session Storage:</strong><br>
+        We use local storage and Firebase to keep you logged in. This app does not use cookies in the web sense.</p>
+
+        <p><strong>Data Retention & Deletion:</strong><br>
+        We retain data only as needed to provide the service. You can request deletion of your account and associated data at any time using the <strong>Delete Account</strong> option in the Account screen. Deletion is permanent.</p>
+
+        <p><strong>Your Rights:</strong><br>
+        You may request deletion of your account and associated data at any time via the Delete Account option in the Account screen or by contacting us at <a href="mailto:support@collegenightlive.com">support@collegenightlive.com</a>.</p>
+
+        <p><strong>Third-Party Services:</strong><br>
+        We use Firebase (Google) for authentication and database storage. We do not share personal data with third parties for marketing. Service providers that process data on our behalf are required to protect user data in line with this policy and applicable law.</p>
 
         <div class="highlight-box">
             <p><strong>Strict Non-Sharing Clause:</strong> No personal user information—including email addresses or names—will be shared with third parties or affiliates for marketing or promotional purposes.</p>
         </div>
 
-        <h2>2. Intel Feed & Conduct</h2>
-        <p>The Intel Feed is a public forum for campus updates. By using this feature, you agree to the following:</p>
-        <ul>
-            <li><strong>Public Visibility:</strong> Anything you post is visible to all registered users at your university.</li>
-            <li><strong>Moderation:</strong> We reserve the right to remove any content that is harassing, illegal, or violates campus safety standards.</li>
-            <li><strong>Responsibility:</strong> You are solely responsible for the content you post.</li>
-        </ul>
+        <h2>2. User Content & Conduct</h2>
+        <p>When you submit bar wait-time vouches or map reports, you agree to the following:</p>
+        <p><strong>Visibility:</strong><br>
+        Your submissions contribute to wait-time estimates and map data visible to other users at your school.</p>
+        <p><strong>Moderation:</strong><br>
+        We reserve the right to remove any content that is harassing, illegal, or violates campus safety standards, and to restrict or block users who violate these terms.</p>
+        <p><strong>Responsibility:</strong><br>
+        You are solely responsible for the content you submit.</p>
 
         <h2>3. Wait-Time Algorithm Disclaimer</h2>
-        <p>CollegeNightLive is an information-sharing tool. Wait times displayed are <strong>estimates</strong> calculated using a consensus-weighted algorithm based on live user reports and historical baselines.</p>
+        <p>Nyte is an information-sharing tool. Wait times displayed are <strong>estimates</strong> calculated using a consensus-weighted algorithm based on live user reports and historical baselines.</p>
         
         <div class="highlight-box">
             <p><strong>Accuracy Notice:</strong> Real-world conditions change rapidly. We do not guarantee the accuracy of wait times. Use of this data is at your own risk, and we are not liable for any inconvenience or outcome resulting from inaccurate estimates.</p>
         </div>
 
-        <h2>4. Safety Beacons (Coming Soon)</h2>
-        <p>Future safety features will require <strong>Location Services (GPS)</strong>. This data will only be accessed when you explicitly trigger a Beacon for your "Trusted Circle." CollegeNightLive is <strong>not</strong> a replacement for 911 or campus emergency services.</p>
+        <h2>4. Third-Party Links</h2>
+        <p>If we add links to third-party websites or apps, we are not responsible for their privacy practices or content.</p>
 
-        <h2>5. Third-Party Links</h2>
-        <p>Our platform includes links to third-party services (e.g., Lyft, Grubhub). We are not responsible for the privacy practices or content of these external sites.</p>
-
-        <h2>6. Affiliation</h2>
+        <h2>5. Affiliation</h2>
         <p>This platform is not affiliated or endorsed by any academic institution.</p>
+
+        <h2>6. Contact, Support & Reporting</h2>
+        <p>For support, questions, or to report abusive or objectionable content, contact us at <a href="mailto:support@collegenightlive.com">support@collegenightlive.com</a>. We will respond in a timely manner and may remove content or take action against users who violate these terms.</p>
+
+        <h2>7. Changes to This Policy</h2>
+        <p>We may update this policy from time to time. The "Last Modified" date at the top will be updated when we do. Continued use of the app after changes means you accept the updated policy. For material changes we may notify you in the app or by email if we have it.</p>
     </div>
 
     <div class="footer">
-        © 2026 Srikar Konda & Jackson Stevenson. All rights reserved.
+        © 2026 Nyte. All rights reserved.
     </div>
 
 </body>

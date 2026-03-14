@@ -15,7 +15,6 @@
             --wait-yellow: #ffd60a;
             --wait-red: #ff453a;
             --vouch-border: #2c2c2e;
-            --status-closed: #3a3a3c;
             --intel-card: rgba(28, 28, 30, 0.6);
             --flag-red: #ff453a;
             --wait-green: #30d158;
@@ -575,7 +574,6 @@
             v.forEach((data) => {
                 const waitString = (data.predicted_wait !== undefined) ? data.predicted_wait : (data.wait_time || 0);
                 const minutes = parseInt(String(waitString).split('-')[0]) || 0;
-                const closed = (data.ai_reason || "").toLowerCase().includes("closed");
                 const dealValue = data.current_deal ? encodeURIComponent(data.current_deal) : "";
                 let fillWidth = 0; let statusColor = "var(--wait-green)";
                 if (isFood) {
@@ -587,13 +585,11 @@
                     else if (minutes <= 45) { fillWidth = 25 + ((minutes - 15) / 30) * 50; statusColor = "var(--wait-yellow)"; }
                     else { fillWidth = 100; statusColor = "var(--wait-red)"; }
                 }
-                if (closed) { fillWidth = 100; statusColor = "var(--status-closed)"; }
                 const row = document.createElement("div"); row.className = `row-item ${data.id === lastUpdatedVenueId ? 'was-updated' : ''}`;
-                row.innerHTML = `<div class="row-top"><div class="venue-info"><div class="venue-name">${data.name}</div></div><div class="wait-time-text">${getWaitRange(waitString, data.ai_reason)}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section"><a href="${affiliateUrl}" target="_blank" class="affiliate-link-btn">${affiliateLabel}</a><button class="deals-btn" onclick="openDeals('${data.name.replace(/'/g, "\\'")}', '${dealValue}')">Deals</button><div class="intel-options">${options.map(t => `<button onclick="reportIntel('${collectionName}', '${data.id}', ${t})">${t === 0 ? '0m' : (t === 25 && e === "food-list") ? '25m+' : (t === 60 && e === "bars-list") ? '60m+' : t + 'm'}</button>`).join('')}</div></div>`;
+                row.innerHTML = `<div class="row-top"><div class="venue-info"><div class="venue-name">${data.name}</div></div><div class="wait-time-text">${waitString || "N/A"}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section"><a href="${affiliateUrl}" target="_blank" class="affiliate-link-btn">${affiliateLabel}</a><button class="deals-btn" onclick="openDeals('${data.name.replace(/'/g, "\\'")}', '${dealValue}')">Deals</button><div class="intel-options">${options.map(t => `<button onclick="reportIntel('${collectionName}', '${data.id}', ${t})">${t === 0 ? '0m' : (t === 25 && e === "food-list") ? '25m+' : (t === 60 && e === "bars-list") ? '60m+' : t + 'm'}</button>`).join('')}</div></div>`;
                 list.appendChild(row);
             });
         }
-        function getWaitRange(m, r) { if (r && r.toLowerCase().includes("closed")) return "CLOSED"; return m || "N/A"; }
         db.collection("universities").doc(uniId).collection("bars").onSnapshot(snap => { currentBars = []; snap.forEach(doc => currentBars.push({ id: doc.id, ...doc.data() })); renderCurrentLists(); });
         db.collection("universities").doc(uniId).collection("food-joints").onSnapshot(snap => { currentFood = []; snap.forEach(doc => currentFood.push({ id: doc.id, ...doc.data() })); renderCurrentLists(); });
         window.reportIntel = async function(col, docId, newTime) { if(!auth.currentUser) return; lastUpdatedVenueId = docId; await db.collection("universities").doc(uniId).collection(col).doc(docId).update({ wait_time: newTime, last_updated: firebase.firestore.FieldValue.serverTimestamp() }); };

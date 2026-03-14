@@ -1,0 +1,140 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. ADMIN HELPER
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == "srikar@collegenightlive.com" ||
+        request.auth.token.email == "jackson@collegenightlive.com" ||
+        request.auth.token.email == "jacksonstevenson926@gmail.com" ||
+        request.auth.token.email == "srikarkonda2@gmail.com"
+      );
+    }
+
+    // 2. THE SHIELD: Must have a Google verified email
+    function isRealUser() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+
+    // 3. THE VALVE: Enforces a 2-minute cooldown between posts
+    function isNotRateLimited() {
+      let tracker = /databases/$(database)/documents/users/$(request.auth.uid)/private/last_post;
+      return !exists(tracker) || request.time > get(tracker).data.timestamp + duration.value(2, 'm');
+    }
+
+    // 4. TOXICITY FILTER
+    function isClean(data) {
+      let content = data.content.lower();
+      return !(
+        content.matches('.*nigger.*') ||
+        content.matches('.*nigga.*') ||
+        content.matches('.*n!gger.*') ||
+        content.matches('.*n1gger.*') ||
+        content.matches('.*retard.*') ||
+        content.matches('.*faggot.*') ||
+        content.matches('.*epstein.*')
+      );
+    }
+
+    // ---------------------------------------------------------
+    // A. INTEL POSTS & COMMENTS
+    // ---------------------------------------------------------
+    match /intel_posts/{postId} {
+      allow read: if isRealUser();
+
+      allow create: if isRealUser()
+                    && request.resource.data.upvotes >= 0
+                    && request.resource.data.upvotes <= 1
+                    && isClean(request.resource.data)
+                    && isNotRateLimited();
+
+      allow update: if isRealUser()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvotes', 'flags', 'comment_count'])
+                    && request.resource.data.upvotes <= resource.data.upvotes + 1;
+
+      allow delete: if isAdmin();
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isRealUser() && isClean(request.resource.data);
+      }
+    }
+
+    // ---------------------------------------------------------
+    // B. CAMPUS DATA (Bars & Food) — anonymous + real users can vouch
+    // active_alerts is server-only (Cloud Function); clients cannot write it
+    // ---------------------------------------------------------
+    match /universities/{universityId} {
+      allow read: if true;
+
+      match /bars/{barId} {
+        allow read: if true;
+        allow update: if isAdmin()
+                      || (request.auth != null
+                          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['historical_baseline', 'name', 'location', 'admin_override', 'display_order', 'id', 'active_alerts', 'ai_reason', 'ai_last_refined'])
+                          && request.resource.data.get('wait_time', 0) >= 0
+                          && request.resource.data.get('wait_time', 120) <= 120);
+        allow create: if isAdmin();
+        allow delete: if isAdmin();
+
+        // Sly alert votes: client can add a vote (like wait time); trigger updates active_alerts
+        match /alert_votes/{voteId} {
+          allow read: if true;
+          allow create: if request.auth != null
+                          && request.resource.data.uid == request.auth.uid
+                          && request.resource.data.type in ['vibe', 'fire_music', 'dead', 'strict_bouncer', 'security', 'ambulance']
+                          && request.resource.data.keys().hasOnly(['type', 'uid', 'createdAt']);
+          allow update, delete: if false;
+        }
+      }
+
+      // Catch-all for other collections under university (e.g. food) — keep existing behavior
+      match /{collectionPath}/{venueId} {
+        allow read: if true;
+        allow update: if isAdmin()
+                      || (request.auth != null
+                          && collectionPath != 'bars'
+                          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['historical_baseline', 'name', 'location', 'admin_override', 'display_order', 'id', 'ai_reason', 'ai_last_refined'])
+                          && request.resource.data.get('wait_time', 0) >= 0
+                          && request.resource.data.get('wait_time', 120) <= 120);
+        allow create, delete: if isAdmin();
+      }
+    }
+
+    // ---------------------------------------------------------
+    // MAP REPORTS (caution / vibe / safety at bars)
+    // ---------------------------------------------------------
+    match /map_reports/{reportId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+    }
+
+    // ---------------------------------------------------------
+    // C. ADMIN REPORTS
+    // ---------------------------------------------------------
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+      allow create: if isRealUser();
+    }
+
+    // ---------------------------------------------------------
+    // D. USER DATA & RATE LIMIT TRACKER
+    // Cooldown fields (undercoverCooldownUntil, creepCooldownUntil) are
+    // written only by Cloud Function; client can read but not change them.
+    // ---------------------------------------------------------
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null
+                    && request.auth.uid == userId
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['undercoverCooldownUntil', 'creepCooldownUntil']);
+
+      match /{allPaths=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+  }
+}

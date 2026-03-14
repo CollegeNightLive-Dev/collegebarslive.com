@@ -9,6 +9,7 @@ firebase-debug.*.log*
 
 # Firebase cache
 .firebase/
+**/hosting..cache
 
 # Firebase config
 
@@ -76,6 +77,10 @@ seed_bars.py
 # Security Keys
 env.js
 serviceAccountKey.json
+# Apple / iOS build credentials (never commit)
+*.p8
+*.p12
+*.mobileprovision
 # OpenSSL Keys and Requests
 collegenightlive.key
 collegenightlive.csr

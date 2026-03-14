@@ -1,0 +1,2 @@
+# For init_sly_alert_fields.py
+google-cloud-firestore>=2.0.0

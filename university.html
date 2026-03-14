@@ -21,7 +21,6 @@
             --wait-yellow: #ffd60a;
             --wait-red: #ff453a;
             --vouch-border: #2c2c2e;
-            --status-closed: #3a3a3c;
             --intel-card: rgba(28, 28, 30, 0.6);
             --flag-red: #ff453a;
             --wait-green: #30d158;
@@ -120,15 +119,11 @@
 
         /* FIXED NAV ALIGNMENT */
         .user-nav-container {
-            width: 100%; 
-            padding: 15px 24px; 
-            display: none; 
-            justify-content: flex-end;
-            align-items: center; 
-            gap: 15px; 
-            box-sizing: border-box;
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-            z-index: 1001;
+            display: none;
+            align-items: center;
+            gap: 15px;
+            position: absolute;
+            right: 24px;
         }
 
         .user-info-text { 
@@ -176,16 +171,19 @@
         }
 
         .tab-nav { 
-            display: flex; 
-            justify-content: center; 
-            gap: 20px; 
-            padding: 20px 0; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 0 24px;
+            height: 60px;
+            box-sizing: border-box;
             background: rgba(0,0,0,0.8); 
             backdrop-filter: blur(20px); 
             position: sticky; 
             top: 0; 
             z-index: 100; 
-            border-bottom: 1px solid var(--border-gray); 
+            border-bottom: 1px solid var(--border-gray);
         }
 
         .tab-link { 
@@ -675,8 +673,9 @@
         
         @media (max-width: 600px) {
             .user-nav-container { 
-                justify-content: center; 
-                padding: 12px; 
+                position: static;
+                gap: 8px;
+                margin-left: auto;
             }
         }
 
@@ -718,24 +717,24 @@
         </p>
     </div>
 
-    <div id="user-nav" class="user-nav-container">
-        <div class="user-info-text">
-            <div id="user-display-name">LOADING...</div>
-            <select id="school-selector" onchange="changeSchool(this.value)">
-                <option value="ohio-state">Ohio State</option>
-                <option value="miami-oh">Miami (OH)</option>
-                <option value="cincinnati">UC</option>
-                <option value="purdue">Purdue</option>
-                <option value="ohio-university">OU</option>
-            </select>
-        </div>
-        <button class="logout-btn" onclick="auth.signOut()">LOGOUT</button>
-    </div>
-
     <nav class="tab-nav">
         <a href="index.html" class="tab-link">Home</a>
         <div class="tab-link active" onclick="switchTab('wait-times')">Wait Times</div>
         <div class="tab-link" onclick="switchTab('safety')">Safety</div>
+
+        <div id="user-nav" class="user-nav-container">
+            <div class="user-info-text">
+                <div id="user-display-name">LOADING...</div>
+                <select id="school-selector" onchange="changeSchool(this.value)">
+                    <option value="ohio-state">Ohio State</option>
+                    <option value="miami-oh">Miami (OH)</option>
+                    <option value="cincinnati">UC</option>
+                    <option value="purdue">Purdue</option>
+                    <option value="ohio-university">OU</option>
+                </select>
+            </div>
+            <button class="logout-btn" onclick="auth.signOut()">LOGOUT</button>
+        </div>
     </nav>
 
     <header>
@@ -862,7 +861,7 @@
     </div>
 
     <div class="footer">
-        © 2026 Srikar Konda and Jackson Stevenson | <a href="terms.html">Terms & Privacy</a>
+        © 2026 Nyte | <a href="terms.html">Terms & Privacy</a>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -1045,7 +1044,6 @@
             v.forEach((data) => {
                 const waitRange = calculateDynamicWait(data);
                 const minutes = parseInt(waitRange.split('-')[0]) || 0;
-                const closed = (data.ai_reason || "").toLowerCase().includes("closed");
                 const isAdmin = auth.currentUser && admins.includes(auth.currentUser.email);
 
                 let fillWidth = 0; let statusColor = "var(--wait-green)";
@@ -1058,11 +1056,10 @@
                     else if (minutes <= 45) { fillWidth = 75; statusColor = "var(--wait-yellow)"; }
                     else { fillWidth = 100; statusColor = "var(--wait-red)"; }
                 }
-                if (closed) { fillWidth = 100; statusColor = "var(--status-closed)"; }
                 
                 const row = document.createElement("div"); row.className = `row-item`;
                 let actionSection = isLocked ? (data.id === vouchedVenueId ? `<div class="vouch-thanks-msg">✅ THANK YOU! <span class="cooldown-timer" id="timer-${data.id}"></span></div>` : "") : `<div class="intel-options">${options.map(t => `<button onclick="reportIntel('${collectionName}', '${data.id}', ${t})">${t}m</button>`).join('')}</div>`;
-                row.innerHTML = `<div class="row-top"><div class="venue-name-group"><div class="venue-name">${data.name}</div></div><div class="wait-time-text">${closed ? "CLOSED" : waitRange + "m"}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section">${actionSection}</div>`;
+                row.innerHTML = `<div class="row-top"><div class="venue-name-group"><div class="venue-name">${data.name}</div></div><div class="wait-time-text">${waitRange + "m"}</div></div><div class="bar-container"><div class="bar-fill" style="width: ${fillWidth}%; background-color: ${statusColor};"></div></div><div class="vouch-section">${actionSection}</div>`;
                 list.appendChild(row);
                 if (isLocked && data.id === vouchedVenueId) startVisualReset(data.id, parseInt(cooldown));
             });

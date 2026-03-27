@@ -32,6 +32,13 @@ export const SCHOOLS: School[] = [
   { id: 'ohio-university', label: 'Ohio Univ.',  shortLabel: 'OU',  accent: '#2e4d30', lat: 39.3231,  lng: -82.1013, city: 'Athens, OH' },
 ];
 
+/** Campus IDs that are locked (preview only: no scroll, no vouch, no map interaction). */
+export const LOCKED_SCHOOL_IDS: string[] = ['miami-oh', 'cincinnati', 'purdue', 'ohio-university'];
+
+export function isSchoolLocked(school: School): boolean {
+  return LOCKED_SCHOOL_IDS.includes(school.id);
+}
+
 export function getMapRegion(school: School) {
   return {
     latitude: school.lat,

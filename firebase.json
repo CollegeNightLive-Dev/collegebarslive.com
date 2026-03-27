@@ -1,17 +1,24 @@
 {
+  "firestore": {
+    "rules": "firestore.rules"
+  },
   "hosting": {
     "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "redirects": [
+      { "source": "/university.html", "destination": "/", "type": 301 },
+      { "source": "/post.html", "destination": "/", "type": 301 },
+      { "source": "/home.html", "destination": "/", "type": 301 }
     ]
   },
   "functions": [
     {
       "source": "functions",
       "codebase": "default",
-      "disallowLegacyRuntimeConfig": true,
       "ignore": [
         "node_modules",
         ".git",

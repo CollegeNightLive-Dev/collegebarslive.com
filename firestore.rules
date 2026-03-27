@@ -72,7 +72,7 @@ service cloud.firestore {
         allow read: if true;
         allow update: if isAdmin()
                       || (request.auth != null
-                          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['historical_baseline', 'name', 'location', 'admin_override', 'display_order', 'id', 'active_alerts', 'ai_reason', 'ai_last_refined'])
+                          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['historical_baseline', 'name', 'location', 'admin_override', 'admin_bar_override', 'display_order', 'id', 'active_alerts', 'ai_reason', 'ai_last_refined'])
                           && request.resource.data.get('wait_time', 0) >= 0
                           && request.resource.data.get('wait_time', 120) <= 120);
         allow create: if isAdmin();
@@ -89,13 +89,45 @@ service cloud.firestore {
         }
       }
 
+      // This Week polls (Thu/Fri/Sat voting)
+      match /this_week_polls/{weekKey} {
+        allow read: if true;
+        allow create, update, delete: if isAdmin();
+
+        match /votes/{uid} {
+          allow read: if request.auth != null;
+          allow create, update: if request.auth != null
+                                && request.auth.uid == uid
+                                && request.resource.data.keys().hasOnly(['byDay', 'updatedAt', 'weekKey', 'voterDormId', 'voterFloor'])
+                                && request.resource.data.byDay is map
+                                && request.resource.data.byDay.keys().hasOnly(['thu', 'fri', 'sat'])
+                                && (!('thu' in request.resource.data.byDay) || request.resource.data.byDay.thu is string)
+                                && (!('fri' in request.resource.data.byDay) || request.resource.data.byDay.fri is string)
+                                && (!('sat' in request.resource.data.byDay) || request.resource.data.byDay.sat is string)
+                                && (!('voterDormId' in request.resource.data) || request.resource.data.voterDormId is string)
+                                && (!('voterFloor' in request.resource.data) || request.resource.data.voterFloor is int);
+          allow delete: if false;
+        }
+      }
+
+      // Server-computed floor aggregates for This Week tab
+      match /this_week_aggregates/{weekKey} {
+        allow read: if true;
+        allow create, update, delete: if isAdmin();
+
+        match /floors/{floorKey} {
+          allow read: if true;
+          allow create, update, delete: if isAdmin();
+        }
+      }
+
       // Catch-all for other collections under university (e.g. food) — keep existing behavior
       match /{collectionPath}/{venueId} {
         allow read: if true;
         allow update: if isAdmin()
                       || (request.auth != null
                           && collectionPath != 'bars'
-                          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['historical_baseline', 'name', 'location', 'admin_override', 'display_order', 'id', 'ai_reason', 'ai_last_refined'])
+                          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['historical_baseline', 'name', 'location', 'admin_override', 'admin_bar_override', 'display_order', 'id', 'ai_reason', 'ai_last_refined'])
                           && request.resource.data.get('wait_time', 0) >= 0
                           && request.resource.data.get('wait_time', 120) <= 120);
         allow create, delete: if isAdmin();

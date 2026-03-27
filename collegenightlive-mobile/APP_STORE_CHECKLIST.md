@@ -65,7 +65,7 @@ Use this list before submitting to reduce the chance of rejection. Tick items as
 
 - [ ] **Production build** – You build with a production profile (e.g. `eas build --platform ios --profile production`); no dev client or debug-only config in the build you submit.
 - [ ] **No crash on launch** – App launches and reaches the first real screen (onboarding or main app) without crashing on a physical device.
-- [ ] **Offline / weak network** – Critical paths (e.g. viewing wait times, labels from Remote Config) degrade gracefully; you have in-app defaults (e.g. “Event Security”, “Fishy”) so the app doesn’t depend on network for core UI.
+- [ ] **Offline / weak network** – Critical paths (e.g. viewing wait times, labels from Remote Config) degrade gracefully; you have in-app defaults (e.g. “Security (UC)”, “Fishy”) so the app doesn’t depend on network for core UI.
 - [ ] **No console errors in release** – Remove or guard any `console.log` that could leak sensitive data; ensure no unhandled promise rejections or errors in the main flow.
 
 ---

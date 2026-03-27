@@ -31,8 +31,9 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { callCallableWithToken, CallableAuthError } from '@/lib/callableWithToken';
 import { useAuth } from '@/context/auth-context';
-import { useSchool, getMapRegion } from '@/context/school-context';
+import { useSchool, getMapRegion, isSchoolLocked } from '@/context/school-context';
 import { useRemoteConfig } from '@/context/remote-config-context';
 import Svg, { Path, Circle, G, Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 
@@ -110,6 +111,23 @@ interface Cluster {
   count: number;
 }
 
+/** Active alert on a bar (set by Cloud Function from alert_votes). */
+interface BarActiveAlert {
+  type: string;
+  expiresAt: { toMillis(): number };
+  countInWindow?: number;
+}
+
+type BarAlertMarker = {
+  barId: string;
+  barName: string;
+  lat: number;
+  lng: number;
+  type: MapReportType;
+  count: number;
+  source: 'active_alert' | 'admin_override';
+};
+
 /** Bar from Firestore for map report picker (optional lat/lng for report location). */
 interface BarForMap {
   id: string;
@@ -119,6 +137,12 @@ interface BarForMap {
   lng?: number;
   historical_baselines?: Record<string, number>;
   recent_reports?: Array<{ value: number; timestamp: unknown; user: string }>;
+  active_alerts?: BarActiveAlert[];
+  admin_bar_override?: {
+    waitMinutes?: number;
+    iconTypes?: string[];
+    expiresAt: { toMillis(): number };
+  };
 }
 
 const REPORT_LABEL: Record<MapReportType, string> = {
@@ -406,6 +430,9 @@ function buildClusters(reports: MapReport[]): Cluster[] {
   return clusters.filter((c) => c.uids.size >= MIN_CONSENSUS);
 }
 
+/** Bar alert types that we show as markers (must match backend ALERT_CONFIG). */
+const BAR_ALERT_TYPES: MapReportType[] = ['security', 'ambulance', 'strict_bouncer', 'vibe', 'fire_music', 'dead'];
+
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function MapScreen() {
   const { school } = useSchool();
@@ -428,6 +455,11 @@ export default function MapScreen() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [undercoverCooldownUntilMs, setUndercoverCooldownUntilMs] = useState<number | null>(null);
   const [creepCooldownUntilMs, setCreepCooldownUntilMs] = useState<number | null>(null);
+  const [hiddenBarAlertKeys, setHiddenBarAlertKeys] = useState<Set<string>>(new Set());
+  const [selectedBarAlert, setSelectedBarAlert] = useState<BarAlertMarker | null>(null);
+  const [feedbackLoading, setFeedbackLoading] = useState<false | 'still_here' | 'gone'>(false);
+
+  const campusLocked = isSchoolLocked(school);
 
   const getReportLabel = useCallback(
     (type: MapReportType) => {
@@ -453,16 +485,26 @@ export default function MapScreen() {
         const data = snap.data();
         const undercover = data?.undercoverCooldownUntil;
         const creep = data?.creepCooldownUntil;
+        const hidden = data?.hiddenBarAlerts && typeof data.hiddenBarAlerts === 'object' ? data.hiddenBarAlerts : {};
+        const now = Date.now();
+        const keys = new Set<string>();
+        for (const [k, v] of Object.entries(hidden)) {
+          if (v && typeof (v as { toMillis?: () => number }).toMillis === 'function' && (v as { toMillis: () => number }).toMillis() > now) {
+            keys.add(k);
+          }
+        }
         setUndercoverCooldownUntilMs(
           undercover && typeof undercover.toMillis === 'function' ? undercover.toMillis() : null,
         );
         setCreepCooldownUntilMs(
           creep && typeof creep.toMillis === 'function' ? creep.toMillis() : null,
         );
+        setHiddenBarAlertKeys(keys);
       },
       () => {
         setUndercoverCooldownUntilMs(null);
         setCreepCooldownUntilMs(null);
+        setHiddenBarAlertKeys(new Set());
       },
     );
     return unsub;
@@ -538,6 +580,58 @@ export default function MapScreen() {
     });
   }, [mapReports]);
 
+  // Bar-level active alerts (from Cloud Function): show icon at each bar that has a non-expired alert
+  const barAlertMarkers = React.useMemo(() => {
+    const now = Date.now();
+    const fallbackLat = school.lat ?? 0;
+    const fallbackLng = school.lng ?? 0;
+    const out: BarAlertMarker[] = [];
+    for (const bar of bars) {
+      const barLat = bar.lat ?? fallbackLat;
+      const barLng = bar.lng ?? fallbackLng;
+      if (barLat === 0 && barLng === 0) continue;
+      const seenTypes = new Set<string>();
+      const alerts = bar.active_alerts ?? [];
+      for (const a of alerts) {
+        if (!a.expiresAt || typeof a.expiresAt.toMillis !== 'function') continue;
+        if (a.expiresAt.toMillis() <= now) continue;
+        if (!BAR_ALERT_TYPES.includes(a.type as MapReportType)) continue;
+        seenTypes.add(a.type);
+        const hideKey = `${school.id}:${bar.id}:${a.type}`;
+        if (hiddenBarAlertKeys.has(hideKey)) continue;
+        out.push({
+          barId: bar.id,
+          barName: bar.name,
+          lat: barLat,
+          lng: barLng,
+          type: a.type as MapReportType,
+          count: a.countInWindow ?? 1,
+          source: 'active_alert',
+        });
+      }
+      const abo = bar.admin_bar_override;
+      if (abo?.expiresAt && typeof abo.expiresAt.toMillis === 'function' && abo.expiresAt.toMillis() > now) {
+        for (const t of abo.iconTypes ?? []) {
+          if (!BAR_ALERT_TYPES.includes(t as MapReportType)) continue;
+          if (seenTypes.has(t)) continue;
+          seenTypes.add(t);
+          const hideKey = `${school.id}:${bar.id}:${t}`;
+          if (hiddenBarAlertKeys.has(hideKey)) continue;
+          out.push({
+            barId: bar.id,
+            barName: bar.name,
+            lat: barLat,
+            lng: barLng,
+            type: t as MapReportType,
+            count: 1,
+            source: 'admin_override',
+          });
+        }
+      }
+    }
+    return out;
+  }, [bars, school.id, school.lat, school.lng, hiddenBarAlertKeys]);
+
   useEffect(() => {
     return () => {
       if (thanksCardDismissRef.current) clearTimeout(thanksCardDismissRef.current);
@@ -585,6 +679,62 @@ export default function MapScreen() {
     setReportSheetVisible(false);
     setSelectedReportType(null);
   }, []);
+
+  const closeBarAlertActions = useCallback(() => {
+    if (feedbackLoading) return;
+    setSelectedBarAlert(null);
+  }, [feedbackLoading]);
+
+  const submitBarAlertFeedback = useCallback(
+    async (action: 'still_here' | 'gone') => {
+      if (!selectedBarAlert || selectedBarAlert.source !== 'active_alert' || feedbackLoading) return;
+      const currentUser = auth.currentUser ?? user;
+      if (!currentUser) {
+        Alert.alert('Sign in required', 'Please wait for sign-in, then try again.');
+        return;
+      }
+
+      setFeedbackLoading(action);
+      try {
+        const idToken = await currentUser.getIdToken(true);
+        await callCallableWithToken<
+          { schoolId: string; barId: string; type: string; action: 'still_here' | 'gone'; _idToken: string },
+          { success: boolean }
+        >('submitBarAlertFeedback', idToken, {
+          schoolId: school.id,
+          barId: selectedBarAlert.barId,
+          type: selectedBarAlert.type,
+          action,
+          _idToken: idToken,
+        });
+
+        if (action === 'gone') {
+          const key = `${school.id}:${selectedBarAlert.barId}:${selectedBarAlert.type}`;
+          setHiddenBarAlertKeys((prev) => {
+            const next = new Set(prev);
+            next.add(key);
+            return next;
+          });
+        }
+
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        setSelectedBarAlert(null);
+      } catch (e: unknown) {
+        const msg =
+          e instanceof CallableAuthError
+            ? e.message
+            : e instanceof Error
+              ? e.message
+              : 'Could not submit feedback. Please try again.';
+        Alert.alert('Action failed', msg);
+      } finally {
+        setFeedbackLoading(false);
+      }
+    },
+    [selectedBarAlert, feedbackLoading, user, school.id],
+  );
 
   const handleReportAtBar = useCallback(
     async (type: MapReportType, bar: BarForMap) => {
@@ -678,6 +828,10 @@ export default function MapScreen() {
         showsMyLocationButton={false}
         showsCompass={false}
         toolbarEnabled={false}
+        scrollEnabled={!campusLocked}
+        zoomEnabled={!campusLocked}
+        pitchEnabled={!campusLocked}
+        rotateEnabled={!campusLocked}
         onRegionChangeComplete={handleRegionChangeComplete}
       >
         {Platform.OS === 'android' && (
@@ -696,7 +850,7 @@ export default function MapScreen() {
           const style = getMarkerStyle(c.type);
           return (
             <Marker
-              key={`${c.type}-${i}`}
+              key={`cluster-${c.type}-${i}`}
               coordinate={{ latitude: c.lat, longitude: c.lng }}
               anchor={{ x: 0.5, y: 0.5 }}
             >
@@ -707,12 +861,46 @@ export default function MapScreen() {
                 ]}
               >
                 <ReportTypeIcon type={c.type} size={20} />
-                <Text style={styles.markerCount}>{c.uids.size}</Text>
+              </View>
+            </Marker>
+          );
+        })}
+        {barAlertMarkers.map((m) => {
+          const style = getMarkerStyle(m.type);
+          return (
+            <Marker
+              key={`bar-alert-${m.barId}-${m.type}`}
+              coordinate={{ latitude: m.lat, longitude: m.lng }}
+              anchor={{ x: 0.5, y: 0.5 }}
+              onPress={() => {
+                if (m.source !== 'active_alert') return;
+                setSelectedBarAlert(m);
+              }}
+            >
+              <View
+                style={[
+                  styles.markerOuter,
+                  { backgroundColor: style.bg, borderColor: style.border },
+                ]}
+              >
+                <ReportTypeIcon type={m.type} size={20} />
               </View>
             </Marker>
           );
         })}
       </MapView>
+
+      {campusLocked && (
+        <>
+          <View style={styles.mapLockCenterOverlay} pointerEvents="none">
+            <Text style={styles.mapLockCenterText}>This campus is currently locked.</Text>
+          </View>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => Alert.alert('Campus locked', 'This campus is currently locked.')}
+          />
+        </>
+      )}
 
       {/* Campus label */}
       <View style={[styles.campusLabel, { borderColor: school.accent }]}>
@@ -720,8 +908,8 @@ export default function MapScreen() {
         <Text style={styles.campusText}>{school.label.toUpperCase()}</Text>
       </View>
 
-      {/* Center to campus: discrete button when user has panned/zoomed away */}
-      {showCenterToCampus && (
+      {/* Center to campus: discrete button when user has panned/zoomed away (hidden when campus locked) */}
+      {!campusLocked && showCenterToCampus && (
         <TouchableOpacity
           style={styles.centerToCampusBtn}
           onPress={handleCenterToCampus}
@@ -734,12 +922,16 @@ export default function MapScreen() {
       {/* Waze-style thanks card at bottom (hides FAB while visible) */}
       {showThanksCard && <ThanksCard accentColor={school.accent} />}
 
-      {/* Waze-style report FAB: hidden when thanks card is showing */}
+      {/* Waze-style report FAB: hidden when thanks card is showing; when campus locked, tap shows lock message */}
       {!showThanksCard && (
         <View style={styles.fabContainer}>
           <TouchableOpacity
             style={styles.fab}
             onPress={() => {
+              if (campusLocked) {
+                Alert.alert('Campus locked', 'This campus is currently locked.');
+                return;
+              }
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setReportSheetVisible(true);
             }}
@@ -883,6 +1075,44 @@ export default function MapScreen() {
         </Pressable>
       </Modal>
 
+      <Modal
+        visible={selectedBarAlert != null}
+        transparent
+        animationType="fade"
+        onRequestClose={closeBarAlertActions}
+      >
+        <Pressable style={styles.sheetBackdrop} onPress={closeBarAlertActions}>
+          <Pressable style={styles.alertActionSheet} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.alertActionTitle}>
+              {selectedBarAlert ? `${getReportLabel(selectedBarAlert.type)} at ${selectedBarAlert.barName}` : ''}
+            </Text>
+            <Text style={styles.alertActionSubtitle}>Is this still accurate?</Text>
+            <View style={styles.alertActionButtons}>
+              <TouchableOpacity
+                style={[styles.alertActionBtn, styles.alertStillBtn, feedbackLoading && styles.alertActionBtnDisabled]}
+                onPress={() => submitBarAlertFeedback('still_here')}
+                disabled={!!feedbackLoading}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.alertActionBtnText}>
+                  {feedbackLoading === 'still_here' ? 'Saving...' : 'Still Here'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.alertActionBtn, styles.alertGoneBtn, feedbackLoading && styles.alertActionBtnDisabled]}
+                onPress={() => submitBarAlertFeedback('gone')}
+                disabled={!!feedbackLoading}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.alertActionBtnText}>
+                  {feedbackLoading === 'gone' ? 'Saving...' : 'Gone'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       {/* Refresh button (when error or for manual refresh) */}
       {(barsError || mapReportsError || refreshing) && (
         <View style={styles.refreshOverlay}>
@@ -977,6 +1207,26 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  barLineMarkerWrap: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+
+  // Locked campus message (map tab, centered)
+  mapLockCenterOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 10,
+  },
+  mapLockCenterText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+    paddingHorizontal: 24,
   },
 
   // Center to campus (discrete, appears when user moves map)
@@ -1203,4 +1453,49 @@ const styles = StyleSheet.create({
   },
   barPickerRowName: { color: '#fff', fontSize: 16, fontWeight: '500' },
   barPickerRowChevron: { color: '#8e8e93', fontSize: 20, fontWeight: '300' },
+  alertActionSheet: {
+    backgroundColor: '#1c1c1e',
+    borderRadius: 16,
+    marginHorizontal: 20,
+    marginBottom: Platform.OS === 'ios' ? 34 : 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#2c2c2e',
+  },
+  alertActionTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  alertActionSubtitle: {
+    color: '#8e8e93',
+    fontSize: 13,
+    marginBottom: 12,
+  },
+  alertActionButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  alertActionBtn: {
+    flex: 1,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertStillBtn: {
+    backgroundColor: '#2c7a4b',
+  },
+  alertGoneBtn: {
+    backgroundColor: '#6a2a2a',
+  },
+  alertActionBtnDisabled: {
+    opacity: 0.6,
+  },
+  alertActionBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
 });

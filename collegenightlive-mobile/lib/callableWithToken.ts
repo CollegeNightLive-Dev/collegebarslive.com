@@ -60,10 +60,11 @@ export async function callCallableWithToken<T, R>(
   }
 
   if (res.status !== 200) {
-    throw new CallableAuthError(
-      json.error?.message ?? `Request failed with status ${res.status}`,
-      String(res.status),
-    );
+    const errMsg =
+      json.error && typeof json.error === 'object' && 'message' in json.error
+        ? String((json.error as { message?: string }).message)
+        : `Request failed with status ${res.status}`;
+    throw new CallableAuthError(errMsg, String(res.status));
   }
 
   return json.result as R;

@@ -8,7 +8,7 @@ import React, {
 import { fetchAndActivate, getValue } from 'firebase/remote-config';
 import { remoteConfig } from '@/lib/firebase';
 
-const DEFAULT_UNDERCOVER_LABEL = 'Event Security';
+const DEFAULT_UNDERCOVER_LABEL = 'Security (UC)';
 const DEFAULT_CREEP_LABEL = 'Fishy';
 
 interface RemoteConfigContextValue {

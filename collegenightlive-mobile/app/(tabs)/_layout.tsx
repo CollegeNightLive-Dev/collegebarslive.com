@@ -32,6 +32,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="weekend"
+        options={{
+          title: 'This Week',
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="calendar" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="account"
         options={{
           title: 'Account',

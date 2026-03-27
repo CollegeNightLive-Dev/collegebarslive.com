@@ -30,6 +30,6 @@ export const functions = getFunctions(app, 'us-central1');
 // Remote Config – defaults so labels work offline
 export const remoteConfig = getRemoteConfig(app);
 (remoteConfig as { defaultConfig?: Record<string, string> }).defaultConfig = {
-  undercover_label: 'Event Security',
+  undercover_label: 'Security (UC)',
   creep_label: 'Fishy',
 };

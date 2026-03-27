@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
   Alert,
   ScrollView,
@@ -18,10 +19,20 @@ import Constants from 'expo-constants';
 import { playError } from '@/lib/sounds';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/context/auth-context';
-import { useSchool, SCHOOLS } from '@/context/school-context';
+import { useSchool } from '@/context/school-context';
+import { useAdmin } from '@/context/admin-context';
 import { ONBOARDING_KEY } from '../onboarding';
+import {
+  loadOsuDormFloor,
+  getOsuDormDisplayName,
+  formatFloorDisplay,
+  OSU_DORM_FLOOR_KEY,
+} from '@/lib/onboarding-dorm';
+import { useFocusEffect } from '@react-navigation/native';
 
 const ACTIVE_OPACITY = 0.7;
+
+const OSU_ID = 'ohio-state';
 
 const C = {
   bg: '#000000',
@@ -66,8 +77,36 @@ function Row({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function AccountScreen() {
   const { loading, authError, retrySignIn, deleteAccount } = useAuth();
-  const { school, setSchool } = useSchool();
-  const [schoolPickerVisible, setSchoolPickerVisible] = useState(false);
+  const { school } = useSchool();
+  const { toggleAdminMode } = useAdmin();
+  const [osuDormName, setOsuDormName] = useState<string | null>(null);
+  const [osuFloorLabel, setOsuFloorLabel] = useState<string | null>(null);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (school.id !== OSU_ID) {
+        setOsuDormName(null);
+        setOsuFloorLabel(null);
+        return;
+      }
+      let cancelled = false;
+      loadOsuDormFloor().then((p) => {
+        if (cancelled) return;
+        if (!p) {
+          setOsuDormName(null);
+          setOsuFloorLabel(null);
+          return;
+        }
+        const name = getOsuDormDisplayName(p.dormId);
+        setOsuDormName(name);
+        setOsuFloorLabel(formatFloorDisplay(p.floor));
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [school.id]),
+  );
 
   function openTerms() {
     if (Platform.OS === 'ios' || Platform.OS === 'android') {
@@ -76,14 +115,8 @@ export default function AccountScreen() {
     router.push('/terms');
   }
 
-  function handleChangeCampus() {
-    if (Platform.OS === 'ios' || Platform.OS === 'android') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setSchoolPickerVisible(true);
-  }
-
   function handleDeleteAccount() {
+    if (isDeletingAccount) return;
     if (Platform.OS === 'ios' || Platform.OS === 'android') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -99,9 +132,11 @@ export default function AccountScreen() {
             if (Platform.OS === 'ios' || Platform.OS === 'android') {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
             }
+            setIsDeletingAccount(true);
             try {
               await deleteAccount();
               await AsyncStorage.removeItem(ONBOARDING_KEY);
+              await AsyncStorage.removeItem(OSU_DORM_FLOOR_KEY);
               router.replace('/account-deleted');
             } catch (err: unknown) {
               const message = err instanceof Error ? err.message : String(err);
@@ -112,6 +147,7 @@ export default function AccountScreen() {
               }
               await playError();
               Alert.alert('Error', message || 'Could not delete account. Please try again.');
+              setIsDeletingAccount(false);
             }
           },
         },
@@ -176,11 +212,15 @@ export default function AccountScreen() {
         </View>
 
         <Section>
-          <Row
-            label="Campus"
-            value={school.label}
-            onPress={handleChangeCampus}
-          />
+          <Row label="Campus" value={school.label} />
+          {school.id === OSU_ID && (
+            <>
+              <View style={styles.divider} />
+              <Row label="Dorm" value={osuDormName ?? '—'} />
+              <View style={styles.divider} />
+              <Row label="Floor" value={osuFloorLabel ?? '—'} />
+            </>
+          )}
         </Section>
 
         <Section>
@@ -188,54 +228,35 @@ export default function AccountScreen() {
         </Section>
 
         <Section>
-          <Row label="Delete Account" destructive onPress={handleDeleteAccount} />
+          <TouchableOpacity
+            style={styles.row}
+            onPress={handleDeleteAccount}
+            disabled={isDeletingAccount}
+            activeOpacity={ACTIVE_OPACITY}
+          >
+            <Text style={[styles.rowLabel, { color: C.red }]}>
+              {isDeletingAccount ? 'Deleting Account...' : 'Delete Account'}
+            </Text>
+            {isDeletingAccount ? <ActivityIndicator color={C.red} size="small" /> : null}
+          </TouchableOpacity>
         </Section>
 
-        {/* School picker inline (simple list, reuses school accent) */}
-        {schoolPickerVisible && (
-          <View style={styles.schoolPicker}>
-            <Text style={styles.schoolPickerTitle}>SELECT CAMPUS</Text>
-            {SCHOOLS.map((s) => {
-              const selected = s.id === school.id;
-              return (
-                <TouchableOpacity
-                  key={s.id}
-                  style={[styles.schoolRow, selected && { borderColor: s.accent }]}
-                  onPress={() => {
-                    if (Platform.OS === 'ios' || Platform.OS === 'android') {
-                      Haptics.selectionAsync();
-                    }
-                    setSchool(s);
-                    setSchoolPickerVisible(false);
-                    if (Platform.OS === 'ios' || Platform.OS === 'android') {
-                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                    }
-                  }}
-                  activeOpacity={ACTIVE_OPACITY}
-                >
-                  <View style={[styles.schoolDot, { backgroundColor: s.accent }]} />
-                  <Text style={[styles.schoolLabel, selected && { color: C.textMain }]}>
-                    {s.label}
-                  </Text>
-                  {selected && (
-                    <Text style={[styles.schoolCheck, { color: s.accent }]}>✓</Text>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-            <TouchableOpacity onPress={() => setSchoolPickerVisible(false)}>
-              <Text style={styles.schoolPickerCancel}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        <Text style={styles.footer}>
-          Nyte © 2026
-          {'\n'}
+        <View style={styles.footer}>
+          <Pressable
+            onLongPress={() => {
+              if (Platform.OS === 'ios' || Platform.OS === 'android') {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }
+              toggleAdminMode();
+            }}
+            delayLongPress={650}
+          >
+            <Text style={styles.footerBrand}>Nyte © 2026</Text>
+          </Pressable>
           <Text style={styles.version}>
             v{Constants.expoConfig?.version ?? '1.0.0'}
           </Text>
-        </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -324,48 +345,16 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
 
-  // School picker (inline)
-  schoolPicker: {
-    backgroundColor: C.card,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-    gap: 8,
-  },
-  schoolPickerTitle: {
-    color: C.textDim,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  schoolRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  schoolDot: { width: 9, height: 9, borderRadius: 5 },
-  schoolLabel: { flex: 1, color: C.textDim, fontSize: 14, fontWeight: '600' },
-  schoolCheck: { fontSize: 14, fontWeight: '700' },
-  schoolPickerCancel: {
-    color: C.textDim,
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-
   footer: {
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  footerBrand: {
     color: '#3a3a3c',
     fontSize: 11,
     textAlign: 'center',
-    marginTop: 24,
   },
-  version: { color: '#3a3a3c', fontSize: 10 },
+  version: { color: '#3a3a3c', fontSize: 10, marginTop: 6, textAlign: 'center' },
   errorContainer: {
     flex: 1,
     alignItems: 'center',
